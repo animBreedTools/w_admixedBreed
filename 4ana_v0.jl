@@ -15,7 +15,7 @@ function w_bayesPR_shaoLei(genoTrain, phenoTrain, breedProp, weights, userMapDat
     println("y is this size", size(y))
     nTraits, nRecords , nMarkers   = size(y,2), size(y,1), size(X,2)
     w           = convert(Array{Float64}, weights)
-    iD          = full(Diagonal(w))  # Dii is wii=r2/(1-r2)==>iDii is (1-r2)/r2
+    iD          = full(Diagonal(w))  # Dii is 1/wii=1/(r2/(1-r2))==> Dii is (1-r2)/r2 ==> iDii is r2/(1-r2)
     fileControlSt(fixedRegSize)
     p           = mean(X,dims=1)./2.0
     sum2pq      = sum(2*(1 .- p).*p) 
@@ -52,6 +52,7 @@ function w_bayesPR_shaoLei(genoTrain, phenoTrain, breedProp, weights, userMapDat
     println("size of xpiDx $(size(xpiDx))")
     println("size of XpiD $(size(XpiD))")
     
+    breedProp = convert(Array{Float64},breedProp)
     bp               = mean(y)*vec(mean(breedProp,1))
     println(bp)
     F = breedProp
