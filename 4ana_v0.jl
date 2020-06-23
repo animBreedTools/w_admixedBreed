@@ -4,8 +4,8 @@ using DelimitedFiles
 using LinearAlgebra
 using CSV
 
-function w_bayesPR_shaoLei(genoTrain, phenoTrain, breedProp, weights, snpInfo, chrs, fixedRegSize, varGenotypic, varResidual, chainLength, burnIn, outputFreq, onScreen)
-    SNPgroups = prepRegionData(snpInfo, chrs, genoTrain, fixedRegSize)
+function w_bayesPR_shaoLei(genoTrain, phenoTrain, breedProp, weights, userMapData, chrs, fixedRegSize, varGenotypic, varResidual, chainLength, burnIn, outputFreq, onScreen)
+    SNPgroups = prepRegionData(userMapData, chrs, genoTrain, fixedRegSize)
     these2Keep = collect((burnIn+outputFreq):outputFreq:chainLength) #print these iterations
     nRegions    = length(SNPgroups)
     println("number of regions: ", nRegions)
