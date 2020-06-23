@@ -248,17 +248,19 @@ function outputControl_shaoLei(sum2pq,onScreen,iter,these2Keep,tempBetaMat,μ,co
     end
 end
 
-function prepRegionData(snpInfo,chrs,genoTrain,fixedRegSize)
+function prepRegionData(userMapData,chrs,genoTrain,fixedRegSize)
     accRegion = 0
     accRegionVec = [0]
     SNPgroups = []
-#    mapData = readtable(pwd()"/$mapFile", header=false)
-    ###only for our map file
-    mapData = readtable("$snpInfo", header=false, separator=',')
-    if size(mapData,2)<5
-        mapData = hcat(collect(1:size(mapData,1)),mapData,makeunique=true)
-    end
+    ###commented out for Ana's map file
+#    mapData = readtable("$snpInfo", header=false, separator=',')
+#    if size(mapData,2)<5
+#        mapData = hcat(collect(1:size(mapData,1)),mapData,makeunique=true)
+#    end
     headMap = [:row, :snpID, :snpOrder ,:chrID, :pos]
+    #for Ana's map
+    mapData = userMapData
+    #
     rename!(mapData , names(mapData), headMap)
     print(mapData[1:5,:])
     mapData[:snpID] = ["M$i" for i in 1:size(mapData,1)] #to convert original IDs like "HAPMAP43437-BTA-101873"
