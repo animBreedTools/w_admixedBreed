@@ -9,7 +9,7 @@ function w_bayesPR_shaoLei(genoTrain, phenoTrain, breedProp, weights, userMapDat
     these2Keep = collect((burnIn+outputFreq):outputFreq:chainLength) #print these iterations
     nRegions    = length(SNPgroups)
     println("number of regions: ", nRegions)
-    X           = convert(Array{Float64}, genoTrain[2:end])
+    X           = convert(Array{Float64}, genoTrain)
     println("X is this size", size(X))
     y           = convert(Array{Float64}, phenoTrain)
     println("y is this size", size(y))
