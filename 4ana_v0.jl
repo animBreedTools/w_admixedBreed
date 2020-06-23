@@ -4,7 +4,7 @@ using DelimitedFiles
 using LinearAlgebra
 using CSV
 
-function w_bayesPR_shaoLei(genoTrain, phenoTrain, weights, snpInfo, chrs, fixedRegSize, varGenotypic, varResidual, chainLength, burnIn, outputFreq, onScreen)
+function w_bayesPR_shaoLei(genoTrain, phenoTrain, ,breedProp, weights, snpInfo, chrs, fixedRegSize, varGenotypic, varResidual, chainLength, burnIn, outputFreq, onScreen)
     SNPgroups = prepRegionData(snpInfo, chrs, genoTrain, fixedRegSize)
     these2Keep = collect((burnIn+outputFreq):outputFreq:chainLength) #print these iterations
     nRegions    = length(SNPgroups)
@@ -47,15 +47,17 @@ function w_bayesPR_shaoLei(genoTrain, phenoTrain, weights, snpInfo, chrs, fixedR
     tempBetaVec     = zeros(Float64,nMarkers)
     μ               = mean(y)
     X              .-= ones(Float64,nRecords)*2p
-#    xpx=[]
-#    for i in 1:nMarkers
-#    push!(xpx,dot(X[:,i],X[:,i]))
-#    end
-#    xpiDx           = diag(X'*iD*X)
     xpiDx            = diag((X.*w)'*X)  #w[i] is already iD[i,i]
     XpiD             = iD*X        #this is to iterate over columns in the body "dot(view(XpiD,:,l),ycorr)"
     println("size of xpiDx $(size(xpiDx))")
     println("size of XpiD $(size(XpiD))")
+    
+    bp               = mean(y)*vec(mean(breedProp,1))
+    println(bp)
+    F = breedProp
+    FpiD = F'*iD
+    iFpiDF = inv(F'*iD*F)
+    
     ycorr           = y .- μ
     GC.gc()
     #MCMC starts here
@@ -71,6 +73,14 @@ function w_bayesPR_shaoLei(genoTrain, phenoTrain, weights, snpInfo, chrs, fixedR
         meanMu   = rhs*invLhs
         μ        = rand(Normal(meanMu,sqrt(invLhs*varE)))
         ycorr    .-= μ
+        #sample fixed effects breed proportions
+        ycorr    .+= F*bp
+        rhs      = FpiD*ycorr
+        invLhs   = iFpiDF
+        meanMu   = vec(invLhs*rhs)
+        bp       = rand(MvNormal(meanMu,convert(Array,Symmetric(invLhs*varE)))) 
+        ycorr    .-= F*bp
+        
         for r in 1:nRegions
             theseLoci = SNPgroups[r]
             regionSize = length(theseLoci)
@@ -85,7 +95,7 @@ function w_bayesPR_shaoLei(genoTrain, phenoTrain, weights, snpInfo, chrs, fixedR
             end
             varBeta[r] = sampleVarBeta(νS_β,tempBetaVec[theseLoci],df_β,regionSize)
         end
-        outputControlSt(onScreen,iter,these2Keep,X,tempBetaVec,μ,varBeta,varE,fixedRegSize)
+        outputControlSt(onScreen,iter,these2Keep,X,tempBetaVec,[μ bp'],varBeta,varE,fixedRegSize)
     end
 end
 
