@@ -52,6 +52,7 @@ function w_bayesPR_shaoLei(genoTrain, phenoTrain, breedProp, weights, userMapDat
     println("size of xpiDx $(size(xpiDx))")
     println("size of XpiD $(size(XpiD))")
     
+    #Can use equal numbers as this is just starting value!
     breedProp = convert(Array{Float64},breedProp)
     bp               = mean(y)*vec(mean(breedProp,1))
     println(bp)
