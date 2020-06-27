@@ -61,6 +61,7 @@ function w_bayesPR_shaoLei(genoTrain, phenoTrain, breedProp, weights, userMapDat
     iFpiDF = inv(FpiD*F)
     
     ycorr           = y .- μ
+    ycorr         .-= F*bp
     GC.gc()
     #MCMC starts here
     for iter in 1:chainLength
