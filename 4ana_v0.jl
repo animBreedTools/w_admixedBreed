@@ -57,6 +57,7 @@ function w_bayesPR_shaoLei(genoTrain, phenoTrain, breedProp, weights, userMapDat
     bp               = mean(y .- μ)*vec(mean(breedProp,1))
     println(bp)
     F = breedProp
+    F .-=  mean(breedProp,1) #scale continous covariate
     FpiD = F'*iD
 #    iFpiDF = inv(full(Diagonal(FpiD*F)))
     iFpiDF = inv(FpiD*F)
