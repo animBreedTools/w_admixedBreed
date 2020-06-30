@@ -145,7 +145,7 @@ function w2_bayesPR_shaoLei(genoTrain, phenoTrain, breedProp, weights, userMapDa
     #initial values as "0"
     tempBetaVec     = zeros(Float64,nMarkers)
     μ               = mean(y)
-#    X              .-= ones(Float64,nRecords)*2p
+    X              .-= ones(Float64,nRecords)*2p
     xpiDx            = diag((X.*w)'*X)  #w[i] is already iD[i,i]
     XpiD             = iD*X        #this is to iterate over columns in the body "dot(view(XpiD,:,l),ycorr)"
     println("size of xpiDx $(size(xpiDx))")
