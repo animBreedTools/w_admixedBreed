@@ -58,8 +58,8 @@ function w_bayesPR_shaoLei(genoTrain, phenoTrain, breedProp, weights, userMapDat
     println(bp)
     F = breedProp
     FpiD = F'*iD
-    iFpiDF = inv(full(Diagonal(FpiD*F)))
-#    iFpiDF = inv(FpiD*F)
+#    iFpiDF = inv(full(Diagonal(FpiD*F)))
+    iFpiDF = inv(FpiD*F)
     
     ycorr           = y .- μ
     ycorr         .-= F*bp
