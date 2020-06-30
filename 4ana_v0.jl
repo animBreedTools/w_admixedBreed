@@ -156,6 +156,9 @@ function w2_bayesPR_shaoLei(genoTrain, phenoTrain, breedProp, weights, userMapDa
     bp               = mean(y .- μ)*vec(mean(breedProp,1))
     println(bp)
     F = breedProp
+    fpiDf            = diag((F.*w)'*F)  #w[i] is already iD[i,i]
+    FpiD             = iD*F        #this is to iterate over columns in the body "dot(view(XpiD,:,l),ycorr)"
+
     
     ycorr           = y .- μ
     ycorr         .-= F*bp
@@ -176,8 +179,8 @@ function w2_bayesPR_shaoLei(genoTrain, phenoTrain, breedProp, weights, userMapDa
         #sample fixed effects breed proportions
         for f in 1:4
             ycorr    .+= F[:,f]*bp[f]
-            rhs      = dot((F[:,f].*w),ycorr)
-            invLhs   = 1.0/dot((F[:,f].*w),F[:,f])
+            rhs      = view(FpiD,:,f)'*ycorr
+            invLhs   = 1.0/fpiDf[f]
             meanMu   = invLhs*rhs
             bp[f]       = rand(Normal(meanMu,sqrt(invLhs*varE)))
             ycorr    .-= F[:,f]*bp[f]
