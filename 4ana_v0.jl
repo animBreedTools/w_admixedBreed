@@ -168,12 +168,12 @@ function w2_bayesPR_shaoLei(genoTrain, phenoTrain, breedProp, weights, userMapDa
         #sample residual variance
         varE = sampleVarE_w(νS_e,ycorr,w,df_e,nRecords)
         #sample fixed effects breed proportions
-        ycorr    .+= Fixed*[μ bp]
+        ycorr    .+= Fixed*[μ; bp]
         rhs      = FixedPrimeiD*ycorr
         invLhs   = iFixedDFixed
         meanMu   = vec(invLhs*rhs)
         allFixed       = rand(MvNormal(meanMu,convert(Array,Symmetric(invLhs*varE)))) 
-        ycorr    .-= Fixed*[μ bp]
+        ycorr    .-= Fixed*[μ; bp]
         μ = allFixed[1]
         bp = allFixed[2:end]
         
