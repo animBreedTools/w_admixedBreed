@@ -156,9 +156,6 @@ function w2_bayesPR_shaoLei(genoTrain, phenoTrain, breedProp, weights, userMapDa
     bp               = mean(y .- μ)*vec(mean(breedProp,1))
     println(bp)
     F = breedProp
-    Fixed = [ones(nRecords) F]
-    FixedPrimeiD = Fixed'*iD
-    iFixedDFixed = inv(Fixed'*iD*Fixed)
     
     ycorr           = y .- μ
     ycorr         .-= F*bp
@@ -167,15 +164,24 @@ function w2_bayesPR_shaoLei(genoTrain, phenoTrain, breedProp, weights, userMapDa
     for iter in 1:chainLength
         #sample residual variance
         varE = sampleVarE_w(νS_e,ycorr,w,df_e,nRecords)
+        #sample intercept
+        ycorr    .+= μ
+#        rhs = ones(nRecords)'iD*ycorr
+#        invLhs = inv(ones(nRecords)'*iD*ones(nRecords))
+        rhs      = sum(ycorr)
+        invLhs   = 1.0/nRecords
+        meanMu   = rhs*invLhs
+        μ        = rand(Normal(meanMu,sqrt(invLhs*varE)))
+        ycorr    .-= μ
         #sample fixed effects breed proportions
-        ycorr    .+= Fixed*[μ; bp]
-        rhs      = FixedPrimeiD*ycorr
-        invLhs   = iFixedDFixed
-        meanMu   = vec(invLhs*rhs)
-        allFixed       = rand(MvNormal(meanMu,convert(Array,Symmetric(invLhs*varE)))) 
-        ycorr    .-= Fixed*[μ; bp]
-        μ = allFixed[1]
-        bp = allFixed[2:end]
+        for f in 1:4
+            ycorr    .+= F[:,f]*bp[f]
+            rhs      = dot((F[:,f].*w),ycorr)
+            invLhs   = 1.0/dot((F[:,f].*w),F[:,f])
+            meanMu   = invLhs*rhs
+            bp[f]       = rand(Normal(meanMu,sqrt(invLhs*varE)))
+            ycorr    .-= F[:,f]*bp[f]
+        end
         
         for r in 1:nRegions
             theseLoci = SNPgroups[r]
