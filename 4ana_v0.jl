@@ -54,7 +54,7 @@ function w_bayesPR_shaoLei(genoTrain, phenoTrain, breedProp, weights, userMapDat
     
     #Can use equal numbers as this is just starting value!
     breedProp = convert(Array{Float64},breedProp)
-    bp               = mean(y)*vec(mean(breedProp,1))
+    bp               = (y .- μ)*vec(mean(breedProp,1))
     println(bp)
     F = breedProp
     FpiD = F'*iD
