@@ -156,7 +156,7 @@ function w2_bayesPR_shaoLei(genoTrain, phenoTrain, breedProp, weights, userMapDa
     bp               = mean(y .- μ)*vec(mean(breedProp,1))
     println(bp)
     F = breedProp
-    F .-=  vec(mean(breedProp,1))
+    F .-=  mean(breedProp,1)'
     fpiDf            = diag((F.*w)'*F)  #w[i] is already iD[i,i]
     FpiD             = iD*F        #this is to iterate over columns in the body "dot(view(XpiD,:,l),ycorr)"
 
