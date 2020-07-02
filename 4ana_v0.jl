@@ -56,14 +56,15 @@ function w2_bayesPR_shaoLei(genoTrain, phenoTrain, breedProp, weights, userMapDa
     #Can use equal numbers as this is just starting value!
     breedProp = convert(Array{Float64},breedProp)
     println(breedProp)
+    F = copy(breedProp)
     F .-=  mean(breedProp,1)
     F = [ones(nRecords) F]
     
     fpiDf            = diag((F.*w)'*F)  #w[i] is already iD[i,i]
     FpiD             = iD*F        #this is to iterate over columns in the body "dot(view(XpiD,:,l),ycorr)"
     
-    f               = [μ mean(y .- μ)*vec(mean(breedProp,1))]
-    ycorr         .= y .- F*f
+    f               = [μ; mean(y .- μ)*vec(mean(breedProp,1))]
+    ycorr           = y - F*f
     GC.gc()
     #MCMC starts here
     for iter in 1:chainLength
