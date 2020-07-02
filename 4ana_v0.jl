@@ -64,9 +64,9 @@ function w2_bayesPR_shaoLei(genoTrain, phenoTrain, breedProp, weights, userMapDa
 #    FpiD             = iD*F        #this is to iterate over columns in the body "dot(view(XpiD,:,l),ycorr)" already transposed
    
     #for block sampler
-    invFpiDF        =  1.0/(diag((F.*w)'*F))  #w[i] is already iD[i,i]
-    invFpiDF        = diagm(vec(invFpiDF))
-    FpiD             = F'*iD
+    FpiDF        =  (F.*w)'*F  #w[i] is already iD[i,i]
+    invFpiDF     = inv(diagm(vec(FpiDF)))
+    FpiD         = F'*iD
     
     f               = [μ; mean(y .- μ)*vec(mean(breedProp,1))]
     ycorr           = y - F*f
