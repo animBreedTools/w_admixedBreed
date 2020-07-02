@@ -4,7 +4,8 @@ using DelimitedFiles
 using LinearAlgebra
 using CSV
 
-function w_InstableFixed_bayesPR_shaoLei(genoTrain, phenoTrain, breedProp, weights, userMapData, chrs, fixedRegSize, varGenotypic, varResidual, chainLength, burnIn, outputFreq, onScreen)
+#block gibbs sampler for fixed effects
+function w2_bayesPR_shaoLei(genoTrain, phenoTrain, breedProp, weights, userMapData, chrs, fixedRegSize, varGenotypic, varResidual, chainLength, burnIn, outputFreq, onScreen)
     SNPgroups = prepRegionData(userMapData, chrs, genoTrain, fixedRegSize)
     these2Keep = collect((burnIn+outputFreq):outputFreq:chainLength) #print these iterations
     nRegions    = length(SNPgroups)
@@ -54,37 +55,29 @@ function w_InstableFixed_bayesPR_shaoLei(genoTrain, phenoTrain, breedProp, weigh
     
     #Can use equal numbers as this is just starting value!
     breedProp = convert(Array{Float64},breedProp)
-    bp               = mean(y .- μ)*vec(mean(breedProp,1))
-    println(bp)
-    F = breedProp
-    F .-=  mean(breedProp,1) #scale continous covariate
-    FpiD = F'*iD
-#    iFpiDF = inv(full(Diagonal(FpiD*F)))
-    iFpiDF = inv(FpiD*F)
+    f               = [μ mean(y .- μ)*vec(mean(breedProp,1))]
+    println(f)
+    F .-=  mean(breedProp,1)
+    F = [ones(nRecords) F]
     
-    ycorr           = y .- μ
-    ycorr         .-= F*bp
+    fpiDf            = diag((F.*w)'*F)  #w[i] is already iD[i,i]
+    FpiD             = iD*F        #this is to iterate over columns in the body "dot(view(XpiD,:,l),ycorr)"
+    
+    ycorr         .= y - F*bp
     GC.gc()
     #MCMC starts here
     for iter in 1:chainLength
         #sample residual variance
         varE = sampleVarE_w(νS_e,ycorr,w,df_e,nRecords)
-        #sample intercept
-        ycorr    .+= μ
-#        rhs = ones(nRecords)'iD*ycorr
-#        invLhs = inv(ones(nRecords)'*iD*ones(nRecords))
-        rhs      = sum(ycorr)
-        invLhs   = 1.0/nRecords
-        meanMu   = rhs*invLhs
-        μ        = rand(Normal(meanMu,sqrt(invLhs*varE)))
-        ycorr    .-= μ
-        #sample fixed effects breed proportions
-        ycorr    .+= F*bp
-        rhs      = FpiD*ycorr
-        invLhs   = iFpiDF
-        meanMu   = vec(invLhs*rhs)
-        bp       = rand(MvNormal(meanMu,convert(Array,Symmetric(invLhs*varE)))) 
-        ycorr    .-= F*bp
+        #sample fixed effects
+        for fix in 1:5
+            ycorr    .+= F[:,fix]*f[fix]
+            rhs      = view(FpiD,:,fix)'*ycorr
+            invLhs   = 1.0/fpiDf[fix]
+            meanMu   = invLhs*rhs
+            bp[f]       = rand(Normal(meanMu,sqrt(invLhs*varE)))
+            ycorr    .-= F[:,fix]*f[fix]
+        end
         
         for r in 1:nRegions
             theseLoci = SNPgroups[r]
@@ -100,9 +93,10 @@ function w_InstableFixed_bayesPR_shaoLei(genoTrain, phenoTrain, breedProp, weigh
             end
             varBeta[r] = sampleVarBeta(νS_β,tempBetaVec[theseLoci],df_β,regionSize)
         end
-        outputControlSt(onScreen,iter,these2Keep,X,tempBetaVec,[μ bp'],varBeta,varE,fixedRegSize)
+        outputControlSt(onScreen,iter,these2Keep,X,tempBetaVec,f,varBeta,varE,fixedRegSize)
     end
 end
+
 
 function w_bayesPR_shaoLei(genoTrain, phenoTrain, breedProp, weights, userMapData, chrs, fixedRegSize, varGenotypic, varResidual, chainLength, burnIn, outputFreq, onScreen)
     SNPgroups = prepRegionData(userMapData, chrs, genoTrain, fixedRegSize)
