@@ -55,7 +55,6 @@ function w2_bayesPR_shaoLei(genoTrain, phenoTrain, breedProp, weights, userMapDa
     
     #Can use equal numbers as this is just starting value!
     breedProp = convert(Array{Float64},breedProp)
-    println(breedProp)
     F = copy(breedProp)
     F .-=  mean(breedProp,1)
     F = [ones(nRecords) F]
