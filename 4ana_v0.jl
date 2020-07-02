@@ -60,8 +60,12 @@ function w2_bayesPR_shaoLei(genoTrain, phenoTrain, breedProp, weights, userMapDa
     F .-=  mean(breedProp,1)
     F = [ones(nRecords) F]
     
-    fpiDf            = diag((F.*w)'*F)  #w[i] is already iD[i,i]
-    FpiD             = iD*F        #this is to iterate over columns in the body "dot(view(XpiD,:,l),ycorr)"
+    #for single-site sampler
+#    fpiDf            = diag((F.*w)'*F)  #w[i] is already iD[i,i]
+    FpiD             = iD*F        #this is to iterate over columns in the body "dot(view(XpiD,:,l),ycorr)" already transposed
+   
+    #for block sampler
+    invFpiDF        =  inv(diag((F.*w)'*F))  #w[i] is already iD[i,i]
     
     f               = [μ; mean(y .- μ)*vec(mean(breedProp,1))]
     ycorr           = y - F*f
@@ -70,15 +74,24 @@ function w2_bayesPR_shaoLei(genoTrain, phenoTrain, breedProp, weights, userMapDa
     for iter in 1:chainLength
         #sample residual variance
         varE = sampleVarE_w(νS_e,ycorr,w,df_e,nRecords)
-        #sample fixed effects
-        for fix in 1:5
-            ycorr    .+= F[:,fix]*f[fix]
-            rhs      = view(FpiD,:,fix)'*ycorr
-            invLhs   = 1.0/fpiDf[fix]
-            meanMu   = invLhs*rhs
-            f[fix]   = rand(Normal(meanMu,sqrt(invLhs*varE)))
-            ycorr    .-= F[:,fix]*f[fix]
-        end
+        #sample fixed effects, single-site gibbs sampling
+#        for fix in 1:5
+#            ycorr    .+= F[:,fix]*f[fix]
+#            rhs      = view(FpiD,:,fix)'*ycorr
+#            invLhs   = 1.0/fpiDf[fix]
+#            meanMu   = invLhs*rhs
+#            f[fix]   = rand(Normal(meanMu,sqrt(invLhs*varE)))
+#            ycorr    .-= F[:,fix]*f[fix]
+#        end
+        
+        #sample fixed effects, block gibbs sampling
+        ycorr    .+= F*f
+        rhs      = FpiD*ycorr
+        invLhs   = invFpiDF
+        meanMu   = invLhs*rhs
+        f        .= rand(MvNormal(vec(meanMu),invLhs*varE))
+        ycorr    .-= F*f
+
         
         for r in 1:nRegions
             theseLoci = SNPgroups[r]
