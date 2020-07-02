@@ -89,11 +89,10 @@ function w2_bayesPR_shaoLei(genoTrain, phenoTrain, breedProp, weights, userMapDa
         ycorr    .+= F*f
         rhs      = FpiD*ycorr
         invLhs   = invFpiDF
-        meanMu   = invLhs*rhs
+        meanMu   = vec(invLhs*rhs)
         println("meanMu: $meanMu")
-        f        .= rand(MvNormal(meanMu,invLhs*varE))
+        f        .= rand(MvNormal(meanMu,convert(Array,Symmetric(invLhs*varE)))) 
         ycorr    .-= F*f
-
         
         for r in 1:nRegions
             theseLoci = SNPgroups[r]
