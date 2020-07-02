@@ -94,7 +94,7 @@ function w2_bayesPR_shaoLei(genoTrain, phenoTrain, breedProp, weights, userMapDa
             end
             varBeta[r] = sampleVarBeta(νS_β,tempBetaVec[theseLoci],df_β,regionSize)
         end
-        outputControlSt(onScreen,iter,these2Keep,X,tempBetaVec,f,varBeta,varE,fixedRegSize)
+        outputControlSt(onScreen,iter,these2Keep,X,tempBetaVec,f',varBeta,varE,fixedRegSize)
     end
 end
 
