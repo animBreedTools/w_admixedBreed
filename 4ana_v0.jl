@@ -63,7 +63,7 @@ function w2_bayesPR_shaoLei(genoTrain, phenoTrain, breedProp, weights, userMapDa
     fpiDf            = diag((F.*w)'*F)  #w[i] is already iD[i,i]
     FpiD             = iD*F        #this is to iterate over columns in the body "dot(view(XpiD,:,l),ycorr)"
     
-    ycorr         .= y - F*bp
+    ycorr         .= y - F*f
     GC.gc()
     #MCMC starts here
     for iter in 1:chainLength
@@ -75,7 +75,7 @@ function w2_bayesPR_shaoLei(genoTrain, phenoTrain, breedProp, weights, userMapDa
             rhs      = view(FpiD,:,fix)'*ycorr
             invLhs   = 1.0/fpiDf[fix]
             meanMu   = invLhs*rhs
-            bp[f]       = rand(Normal(meanMu,sqrt(invLhs*varE)))
+            f[fix]       = rand(Normal(meanMu,sqrt(invLhs*varE)))
             ycorr    .-= F[:,fix]*f[fix]
         end
         
