@@ -65,6 +65,7 @@ function w2_bayesPR_shaoLei(genoTrain, phenoTrain, breedProp, weights, userMapDa
    
     #for block sampler
     invFpiDF        =  1.0/(diag((F.*w)'*F))  #w[i] is already iD[i,i]
+    invFpiDF        = diagm(vec(invFpiDF))
     FpiD             = F'*iD
     
     f               = [μ; mean(y .- μ)*vec(mean(breedProp,1))]
