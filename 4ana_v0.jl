@@ -90,7 +90,8 @@ function w2_bayesPR_shaoLei(genoTrain, phenoTrain, breedProp, weights, userMapDa
         rhs      = FpiD*ycorr
         invLhs   = invFpiDF
         meanMu   = invLhs*rhs
-        f        .= rand(MvNormal(vec(meanMu),invLhs*varE))
+        println("meanMu: $meanMu")
+        f        .= rand(MvNormal(meanMu,invLhs*varE))
         ycorr    .-= F*f
 
         
