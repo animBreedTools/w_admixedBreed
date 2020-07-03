@@ -4,7 +4,6 @@ using DelimitedFiles
 using LinearAlgebra
 using CSV
 
-#block gibbs sampler for fixed effects
 function w2_bayesPR_shaoLei(genoTrain, phenoTrain, breedProp, weights, userMapData, chrs, fixedRegSize, varGenotypic, varResidual, chainLength, burnIn, outputFreq, onScreen)
     SNPgroups = prepRegionData(userMapData, chrs, genoTrain, fixedRegSize)
     these2Keep = collect((burnIn+outputFreq):outputFreq:chainLength) #print these iterations
@@ -60,14 +59,8 @@ function w2_bayesPR_shaoLei(genoTrain, phenoTrain, breedProp, weights, userMapDa
     F = [ones(nRecords) F]
     
     #for single-site sampler
-#    fpiDf            = diag((F.*w)'*F)  #w[i] is already iD[i,i]
-#    FpiD             = iD*F        #this is to iterate over columns in the body "dot(view(XpiD,:,l),ycorr)" already transposed
-   
-    #for block sampler
-    FpiDF        =  (F.*w)'*F  #w[i] is already iD[i,i]
-    invFpiDF     = inv(FpiDF)
-    FpiD         = F'*iD
-    
+    fpiDf            = diag((F.*w)'*F)  #w[i] is already iD[i,i]
+    FpiD             = iD*F        #this is to iterate over columns in the body "dot(view(XpiD,:,l),ycorr)" already transposed    
     f               = [μ; mean(y .- μ)*vec(mean(breedProp,1))]
     ycorr           = y - F*f
     GC.gc()
@@ -76,23 +69,14 @@ function w2_bayesPR_shaoLei(genoTrain, phenoTrain, breedProp, weights, userMapDa
         #sample residual variance
         varE = sampleVarE_w(νS_e,ycorr,w,df_e,nRecords)
         #sample fixed effects, single-site gibbs sampling
-#        for fix in 1:5
-#            ycorr    .+= F[:,fix]*f[fix]
-#            rhs      = view(FpiD,:,fix)'*ycorr
-#            invLhs   = 1.0/fpiDf[fix]
-#            meanMu   = invLhs*rhs
-#            f[fix]   = rand(Normal(meanMu,sqrt(invLhs*varE)))
-#            ycorr    .-= F[:,fix]*f[fix]
-#        end
-        
-        #sample fixed effects, block gibbs sampling
-        ycorr    .+= F*f
-        rhs      = FpiD*ycorr
-        invLhs   = invFpiDF
-        meanMu   = invLhs*rhs
-        println("meanMu: $meanMu")
-        f        .= rand(MvNormal(meanMu,convert(Array,Symmetric(invLhs*varE)))) 
-        ycorr    .-= F*f
+        for fix in 1:5
+            ycorr    .+= F[:,fix]*f[fix]
+            rhs      = view(FpiD,:,fix)'*ycorr
+            invLhs   = 1.0/fpiDf[fix]
+            meanMu   = invLhs*rhs
+            f[fix]   = rand(Normal(meanMu,sqrt(invLhs*varE)))
+            ycorr    .-= F[:,fix]*f[fix]
+        end
         
         for r in 1:nRegions
             theseLoci = SNPgroups[r]
