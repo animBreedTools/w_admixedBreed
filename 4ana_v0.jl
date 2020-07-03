@@ -71,6 +71,7 @@ function w2_bayesPR_shaoLei(genoTrain, phenoTrain, breedProp, weights, userMapDa
     f               = [μ; mean(y .- μ)*vec(mean(breedProp,1))]
     ycorr           = y - F*f
     GC.gc()
+    varE = varResidual
     #MCMC starts here
     for iter in 1:chainLength
         #sample residual variance
