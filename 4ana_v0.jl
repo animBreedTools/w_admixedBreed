@@ -71,11 +71,10 @@ function w2_bayesPR_shaoLei(genoTrain, phenoTrain, breedProp, weights, userMapDa
     f               = [μ; mean(y .- μ)*vec(mean(breedProp,1))]
     ycorr           = y - F*f
     GC.gc()
-    varE = varResidual
     #MCMC starts here
     for iter in 1:chainLength
         #sample residual variance
-#        varE = sampleVarE_w(νS_e,ycorr,w,df_e,nRecords)
+        varE = sampleVarE_w(νS_e,ycorr,w,df_e,nRecords)
         #sample fixed effects, single-site gibbs sampling
 #        for fix in 1:5
 #            ycorr    .+= F[:,fix]*f[fix]
@@ -109,8 +108,6 @@ function w2_bayesPR_shaoLei(genoTrain, phenoTrain, breedProp, weights, userMapDa
             end
             varBeta[r] = sampleVarBeta(νS_β,tempBetaVec[theseLoci],df_β,regionSize)
         end
-        #sample residual variance
-        varE = sampleVarE_w(νS_e,ycorr,w,df_e,nRecords)
         outputControlSt(onScreen,iter,these2Keep,X,tempBetaVec,f',varBeta,varE,fixedRegSize)
     end
 end
