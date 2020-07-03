@@ -84,7 +84,8 @@ function w2_bayesPR_shaoLei(genoTrain, phenoTrain, breedProp, weights, userMapDa
             λ_r = varE/varBeta[r]
             for l in theseLoci::UnitRange{Int64}
                 BLAS.axpy!(tempBetaVec[l], view(X,:,l), ycorr)
-                rhs = view(XpiD,:,l)'*ycorr
+#                rhs = view(XpiD,:,l)'*ycorr
+                rhs = BLAS.dot(view(XpiD,:,l),ycorr)
                 lhs = xpiDx[l] + λ_r
                 meanBeta = lhs\rhs
                 tempBetaVec[l] = sampleBeta(meanBeta, lhs, varE)
