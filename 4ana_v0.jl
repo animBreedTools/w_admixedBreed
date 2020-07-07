@@ -153,7 +153,7 @@ function w_bayesPR_BlockedGS(genoTrain, phenoTrain, breedProp, weights, userMapD
     
     #blocked sampler
     invFpiDF        = inv((F.*w)'*F)  #w[i] is already iD[i,i]
-    FpiD            = iD*F        #this is to iterate over columns in the body "dot(view(XpiD,:,l),ycorr)" already transposed    
+    FpiD            = F'iD        #this is to iterate over columns in the body "dot(view(XpiD,:,l),ycorr)" already transposed    
     f               = [μ; mean(y .- μ)*vec(mean(breedProp,1))]
     ycorr           = y - F*f
     GC.gc()
