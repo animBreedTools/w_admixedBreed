@@ -151,9 +151,9 @@ function w_bayesPR_BlockedGS(genoTrain, phenoTrain, breedProp, weights, userMapD
     F .-=  mean(breedProp,1)
     F = [ones(nRecords) F]
     
-    #for single-site sampler
-    fpiDf            = diag((F.*w)'*F)  #w[i] is already iD[i,i]
-    FpiD             = iD*F        #this is to iterate over columns in the body "dot(view(XpiD,:,l),ycorr)" already transposed    
+    #blocked sampler
+    invFpiDF        = inv((F.*w)'*F)  #w[i] is already iD[i,i]
+    FpiD            = iD*F        #this is to iterate over columns in the body "dot(view(XpiD,:,l),ycorr)" already transposed    
     f               = [μ; mean(y .- μ)*vec(mean(breedProp,1))]
     ycorr           = y - F*f
     GC.gc()
@@ -162,14 +162,14 @@ function w_bayesPR_BlockedGS(genoTrain, phenoTrain, breedProp, weights, userMapD
         #sample residual variance
         varE = sampleVarE_w(νS_e,ycorr,w,df_e,nRecords)
         #sample fixed effects, single-site gibbs sampling
-        for fix in 1:size(F,2)
-            ycorr    .+= F[:,fix]*f[fix]
-            rhs      = view(FpiD,:,fix)'*ycorr
-            invLhs   = 1.0/fpiDf[fix]
-            meanMu   = invLhs*rhs
-            f[fix]   = rand(Normal(meanMu,sqrt(invLhs*varE)))
-            ycorr    .-= F[:,fix]*f[fix]
-        end
+        
+        ycorr    .+= F*f
+        rhs      = view(FpiD,:,:)*ycorr
+        invLhs   = view(invFpiDF,:,:)
+        meanMu   = invLhs*rhs
+        f       .= rand(MvNormal(meanMu,invLhs*varE))
+        ycorr    .-= F*f
+    
         
         for r in 1:nRegions
             theseLoci = SNPgroups[r]
