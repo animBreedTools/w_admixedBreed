@@ -105,10 +105,6 @@ function w_bayesPR_BlockedGS(genoTrain, phenoTrain, breedProp, weights, userMapD
     X           = convert(Array{Float64}, genoTrain)
     println("X is this size", size(X))
     y           = convert(Array{Float64}, phenoTrain)
-    ####
-    #center y
-    y -= mean(y) 
-    ####
     println("y is this size", size(y))
     nTraits, nRecords , nMarkers   = size(y,2), size(y,1), size(X,2)
     w           = convert(Array{Float64}, weights)
