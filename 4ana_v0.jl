@@ -147,7 +147,10 @@ function w_bayesPR_BlockedGS(genoTrain, phenoTrain, breedProp, weights, userMapD
     
     #Can use equal numbers as this is just starting value!
     breedProp = convert(Array{Float64},breedProp)
-    F = copy(breedProp)
+    #######logF
+    F = log.(10,copy(breedProp))
+    #######
+    #F = copy(breedProp)
     F .-=  mean(breedProp,1)
     F = [ones(nRecords) F]
     
