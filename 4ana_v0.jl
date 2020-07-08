@@ -167,7 +167,7 @@ function w_bayesPR_BlockedGS(genoTrain, phenoTrain, breedProp, weights, userMapD
         rhs      = view(FpiD,:,:)*ycorr
         invLhs   = view(invFpiDF,:,:)
         meanMu   = invLhs*rhs
-        f       .= rand(MvNormal(meanMu,invLhs*varE))
+        f       .= rand(MvNormal(meanMu,convert(Array,Symmetric(invLhs*varE))))
         ycorr    .-= F*f
     
         
