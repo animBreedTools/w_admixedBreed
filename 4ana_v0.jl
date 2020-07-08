@@ -151,7 +151,7 @@ function w_bayesPR_BlockedGS(genoTrain, phenoTrain, breedProp, weights, userMapD
     F = log.(10,copy(breedProp))
     #######
     #F = copy(breedProp)
-    F .-=  mean(breedProp,1)
+    #F .-=  mean(breedProp,1)
     F = [ones(nRecords) F]
     
     #blocked sampler
