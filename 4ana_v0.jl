@@ -191,9 +191,9 @@ function w_bayesPR_BlockedGS(genoTrain, phenoTrain, breedProp, weights, userMapD
 end
 
 #one trait multiple components
-function bayesPR2_b(randomEffects, centered, phenoTrain, geno4Map, snpInfo, chrs, fixedRegSize, varGenotypic, varResidual, chainLength, burnIn, outputFreq, onScreen)
+function bayesPR2_b(randomEffects, centered, phenoTrain, locusID, snpInfo, chrs, fixedRegSize, varGenotypic, varResidual, chainLength, burnIn, outputFreq, onScreen)
     println("I am here")
-    SNPgroups  = prepRegionData(snpInfo, chrs, geno4Map, fixedRegSize)
+    SNPgroups  = prepRegionData(snpInfo, chrs, locusID, fixedRegSize)
     these2Keep = collect((burnIn+outputFreq):outputFreq:chainLength) #print these iterations
     nRegions    = length(SNPgroups)
     println("number of regions: ", nRegions)
@@ -353,6 +353,7 @@ function prepRegionData(userMapData,chrs,locusID,fixedRegSize)
     #genoX = genoTrain[[find(i -> i == j, names(genoTrain))[] for j in [Symbol(mapData[:snpID][i]) for i in 1:size(mapData,1)]]]
     #genoX = genoTrain
     totLoci = length(usedLoci) # first col is ID
+    println("totalLoci in MAP: $totLoci")
     snpInfoFinal = DataFrame(Any, 0, 3)
     if fixedRegSize==99
         println("fixedRedSize $fixedRegSize")
