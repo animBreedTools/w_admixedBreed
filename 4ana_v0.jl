@@ -191,9 +191,9 @@ function w_bayesPR_BlockedGS(genoTrain, phenoTrain, breedProp, weights, userMapD
 end
 
 #one trait multiple components
-function bayesPR2_b(randomEffects, centered, phenoTrain, locusID, snpInfo, chrs, fixedRegSize, varGenotypic, varResidual, chainLength, burnIn, outputFreq, onScreen)
+function bayesPR2_b(randomEffects, centered, phenoTrain, locusID, userMapData, chrs, fixedRegSize, varGenotypic, varResidual, chainLength, burnIn, outputFreq, onScreen)
     println("I am here")
-    SNPgroups  = prepRegionData(snpInfo, chrs, locusID, fixedRegSize)
+    SNPgroups  = prepRegionData(userMapData, chrs, locusID, fixedRegSize)
     these2Keep = collect((burnIn+outputFreq):outputFreq:chainLength) #print these iterations
     nRegions    = length(SNPgroups)
     println("number of regions: ", nRegions)
