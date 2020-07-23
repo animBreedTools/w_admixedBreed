@@ -193,7 +193,7 @@ end
 #one trait multiple components
 function bayesPR2_b(randomEffects, centered, phenoTrain, geno4Map, snpInfo, chrs, fixedRegSize, varGenotypic, varResidual, chainLength, burnIn, outputFreq, onScreen)
     println("I am here")
-    SNPgroups  = prep2RegionData(snpInfo, chrs, geno4Map, fixedRegSize)
+    SNPgroups  = prepRegionData(snpInfo, chrs, geno4Map, fixedRegSize)
     these2Keep = collect((burnIn+outputFreq):outputFreq:chainLength) #print these iterations
     nRegions    = length(SNPgroups)
     println("number of regions: ", nRegions)
