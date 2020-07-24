@@ -450,6 +450,47 @@ function fileControl(nTraits,fixedRegSize)
     end
 end
 
+function fileControlSt2(fixedRegSize)
+    for f in ["muOut$fixedRegSize" "beta1Out$fixedRegSize" "beta2Out$fixedRegSize" "beta3Out$fixedRegSize" "beta1Out$fixedRegSize" "covBetaOut$fixedRegSize" "varEOut$fixedRegSize"]
+        if isfile(f)==true
+            rm(f)
+            println("$f removed")
+        end
+    end
+end
+
+function outputControl2(nRandComp,onScreen,iter,these2Keep,tempBetaMat,μ,covBeta,varE,fixedRegSize,nRegions)
+    if iter in these2Keep
+        out0 = open(pwd()*"/muOut$fixedRegSize", "a")
+        writecsv(out0, μ)
+        close(out0)
+        for t in 1:nRandComp
+            out1 = open(pwd()*"/beta"*"$t"*"Out$fixedRegSize", "a")
+            writecsv(out1, tempBetaMat[t,:]')
+            close(out1)
+        end
+        outCov = open(pwd()*"/covBetaOut$fixedRegSize", "a")
+        printThis = [vcat(covBeta[r]...) for r in 1:nRegions]'
+        writecsv(outCov, printThis)
+        close(outCov)
+        out3 = open(pwd()*"/varEOut$fixedRegSize", "a")
+        writecsv(out3, varE)
+        close(out3)
+#        coVarUhat = cov(X*tempBetaMat')
+#        out4 = open(pwd()*"/coVarUhatOut$fixedRegSize", "a")
+#        writecsv(out4, vec(coVarUhat)')
+#        close(out4)    
+        if onScreen==true
+            coVarBeta = cov(tempBetaMat')
+            corBeta   = cor(tempBetaMat') 
+            println("iter $iter \n coVarBeta (Overall): $coVarBeta \n corBeta: $corBeta \n varE: $varE \n")
+        elseif onScreen==false
+             @printf("iter %s\n", iter)
+        end
+    end
+end
+
+
 function sampleBeta(meanBeta, lhs, varE)
     return rand(Normal(meanBeta,sqrt(lhs\varE)))
 end
