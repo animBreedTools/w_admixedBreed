@@ -326,6 +326,14 @@ function bayesPR2_b(randomEffects, centered, phenoTrain, weights, locusID, userM
                 tempBetaMat[3,locus] = sampleBeta(meanBeta, lhs, varE)
                 BLAS.axpy!(-1*view(tempBetaMat,3,locus),view(M3,:,locus),ycorr)
 
+                BLAS.axpy!(view(tempBetaMat,4,locus),view(M4,:,locus),ycorr)
+                rhs = BLAS.dot(view(M4piD,:,locus),ycorr)
+                lhs   = m4piDm4[locus] + lambda[4]
+                meanBeta = lhs\rhs
+                tempBetaMat[4,locus] = sampleBeta(meanBeta, lhs, varE)
+                BLAS.axpy!(-1*view(tempBetaMat,4,locus),view(M4,:,locus),ycorr)
+
+                
             end
 #            covBeta[r][1,1] = sampleVarBeta(νS_β[1],tempBetaMat[1,theseLoci],df_β,regionSize)
 #            covBeta[r][2,2] = sampleVarBeta(νS_β[2],tempBetaMat[2,theseLoci],df_β,regionSize)
@@ -334,7 +342,9 @@ function bayesPR2_b(randomEffects, centered, phenoTrain, weights, locusID, userM
             cov1 = sampleVarBeta(νS_β[1],tempBetaMat[1,theseLoci],df_β,regionSize)
             cov2 = sampleVarBeta(νS_β[2],tempBetaMat[2,theseLoci],df_β,regionSize)
             cov3 = sampleVarBeta(νS_β[3],tempBetaMat[3,theseLoci],df_β,regionSize)
-            covBeta[r]      = [cov1 0 0; 0 cov2 0; 0 0 cov3]
+            cov4 = sampleVarBeta(νS_β[4],tempBetaMat[4,theseLoci],df_β,regionSize)
+
+            covBeta[r]      = [cov1 0 0 0; 0 cov2 0 0; 0 0 cov3 0; 0 0 0 cov4]
         end
         outputControl2(nRandComp,onScreen,iter,these2Keep,tempBetaMat,μ,covBeta,varE,fixedRegSize,nRegions)
     end
