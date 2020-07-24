@@ -226,18 +226,16 @@ function bayesPR2_b(randomEffects, centered, phenoTrain, weights, locusID, userM
     end
     nowM = 0
   println(whos()) 
-    m1pm1=[]
-    m2pm2=[]
-    m3pm3=[]
+    m1piDm1=[]
+    m2piDm2=[]
+    m3piDm3=[]
+    m4piDm4=[]
     for i in 1:nMarkers
-        push!(m1pm1,dot(M1[:,i],M1[:,i]))
-        push!(m2pm2,dot(M2[:,i],M2[:,i]))
-        push!(m3pm3,dot(M3[:,i],M3[:,i]))
+        push!(m1piDm1,dot(M1[:,i].*w,M1[:,i]))
+        push!(m2piDm2,dot(M2[:,i].*w,M2[:,i]))
+        push!(m3piDm3,dot(M3[:,i].*w,M3[:,i]))
+        push!(m4piDm4,dot(M4[:,i].*w,M4[:,i]))
     end
-
-#    m1pm1 = diag(M1'M1)
-#    m2pm2 = diag(M2'M2)
-#    m3pm3 = diag(M3'M3)
        
     fileControlSt2(fixedRegSize)
 
@@ -279,13 +277,13 @@ function bayesPR2_b(randomEffects, centered, phenoTrain, weights, locusID, userM
     tempBetaMat     = zeros(Float64,nRandComp,nMarkers)
     μ               = mean(y)
     ##########
-    m1piDm1         = diag((M1.*w)'*M1)  #w[i] is already iD[i,i]
+#    m1piDm1         = diag((M1.*w)'*M1)  #w[i] is already iD[i,i]
     M1piD           = iD*M1        #this is to iterate over columns in the body "dot(view(XpiD,:,l),ycorr)"
-    m2piDm2         = diag((M2.*w)'*M2)
+#    m2piDm2         = diag((M2.*w)'*M2) #I do it up with push!
     M2piD           = iD*M2
-    m3piDm3         = diag((M3.*w)'*M3)
+#    m3piDm3         = diag((M3.*w)'*M3)
     M3piD           = iD*M3
-    m4piDm4         = diag((M4.*w)'*M4)
+#    m4piDm4         = diag((M4.*w)'*M4)
     M4piD           = iD*M4
     ##########
     ycorr           = y .- μ
