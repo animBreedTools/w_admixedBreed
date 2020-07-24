@@ -191,7 +191,7 @@ function w_bayesPR_BlockedGS(genoTrain, phenoTrain, breedProp, weights, userMapD
 end
 
 #one trait multiple components
-function bayesPR2_b(randomEffects, centered, phenoTrain, locusID, userMapData, chrs, fixedRegSize, varGenotypic, varResidual, chainLength, burnIn, outputFreq, onScreen)
+function bayesPR2_b(randomEffects, centered, phenoTrain, weights, locusID, userMapData, chrs, fixedRegSize, varGenotypic, varResidual, chainLength, burnIn, outputFreq, onScreen)
     println("I am here")
     SNPgroups  = prepRegionData(userMapData, chrs, locusID, fixedRegSize)
     these2Keep = collect((burnIn+outputFreq):outputFreq:chainLength) #print these iterations
@@ -201,6 +201,10 @@ function bayesPR2_b(randomEffects, centered, phenoTrain, locusID, userMapData, c
     nRecords = size(phenoTrain,1)
     println("number of markers: ", nMarkers)
     println("number of records: ", nRecords)
+    
+    w           = convert(Array{Float64}, weights)
+    iD          = full(Diagonal(w))  # Dii is 1/wii=1/(r2/(1-r2))==> Dii is (1-r2)/r2 ==> iDii is r2/(1-r2)
+
     nRandComp = length(split(randomEffects, " "))
     sum2pq = Array{Float64}(3)
     
@@ -274,13 +278,22 @@ function bayesPR2_b(randomEffects, centered, phenoTrain, locusID, userMapData, c
     #initial values as "0"
     tempBetaMat     = zeros(Float64,nRandComp,nMarkers)
     μ               = mean(y)
-    
+    ##########
+    m1piDm1         = diag((M1.*w)'*M1)  #w[i] is already iD[i,i]
+    M1piD           = iD*M1        #this is to iterate over columns in the body "dot(view(XpiD,:,l),ycorr)"
+    m2piDm2         = diag((M2.*w)'*M2)
+    M2piD           = iD*M2
+    m3piDm3         = diag((M3.*w)'*M3)
+    M3piD           = iD*M3
+    m4piDm4         = diag((M4.*w)'*M4)
+    M4piD           = iD*M4
+    ##########
     ycorr           = y .- μ
     
     #MCMC starts here
     for iter in 1:chainLength
         #sample residual variance
-        varE = sampleVarE(νS_e,ycorr,df_e,nRecords)
+        varE = sampleVarE_w(νS_e,ycorr,w,df_e,nRecords)
         #sample intercept
         ycorr  .+= μ
         rhs      = sum(ycorr)
@@ -295,22 +308,22 @@ function bayesPR2_b(randomEffects, centered, phenoTrain, locusID, userMapData, c
             for locus in theseLoci::UnitRange{Int64}
                 
                 BLAS.axpy!(view(tempBetaMat,1,locus),view(M1,:,locus),ycorr)
-                rhs = dot(view(M1,:,locus),ycorr)
-                lhs   = m1pm1[locus] + lambda[1]
+                rhs = BLAS.dot(view(M1piD,:,locus),ycorr)
+                lhs   = m1piDm1[locus] + lambda[1]
                 meanBeta = lhs\rhs
                 tempBetaMat[1,locus] = sampleBeta(meanBeta, lhs, varE)
                 BLAS.axpy!(-1*view(tempBetaMat,1,locus),view(M1,:,locus),ycorr)
                 
                 BLAS.axpy!(view(tempBetaMat,2,locus),view(M2,:,locus),ycorr)
-                rhs = dot(view(M2,:,locus),ycorr)
-                lhs   = m2pm2[locus] + lambda[2]
+                rhs = BLAS.dot(view(M2piD,:,locus),ycorr)
+                lhs   = m2piDm2[locus] + lambda[2]
                 meanBeta = lhs\rhs
                 tempBetaMat[2,locus] = sampleBeta(meanBeta, lhs, varE)
                 BLAS.axpy!(-1*view(tempBetaMat,2,locus),view(M2,:,locus),ycorr)
                 
                 BLAS.axpy!(view(tempBetaMat,3,locus),view(M3,:,locus),ycorr)
-                rhs = dot(view(M3,:,locus),ycorr)
-                lhs   = m3pm3[locus] + lambda[3]
+                rhs = BLAS.dot(view(M3piD,:,locus),ycorr)
+                lhs   = m3piDm3[locus] + lambda[3]
                 meanBeta = lhs\rhs
                 tempBetaMat[3,locus] = sampleBeta(meanBeta, lhs, varE)
                 BLAS.axpy!(-1*view(tempBetaMat,3,locus),view(M3,:,locus),ycorr)
