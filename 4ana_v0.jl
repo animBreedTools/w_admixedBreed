@@ -461,7 +461,7 @@ function fileControl(nTraits,fixedRegSize)
 end
 
 function fileControlSt2(fixedRegSize)
-    for f in ["muOut$fixedRegSize" "beta1Out$fixedRegSize" "beta2Out$fixedRegSize" "beta3Out$fixedRegSize" "beta1Out$fixedRegSize" "covBetaOut$fixedRegSize" "varEOut$fixedRegSize"]
+    for f in ["muOut$fixedRegSize" "beta1Out$fixedRegSize" "beta2Out$fixedRegSize" "beta3Out$fixedRegSize" "beta4Out$fixedRegSize" "covBetaOut$fixedRegSize" "varEOut$fixedRegSize"]
         if isfile(f)==true
             rm(f)
             println("$f removed")
