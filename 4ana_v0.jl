@@ -352,9 +352,9 @@ function bayesPR2_b(randomEffects, centered, phenoTrain, weights, locusID, userM
 end
 
 #one trait multiple components, correlated
-function bayesPR2(randomEffects, centered, phenoTrain, geno4Map, snpInfo, chrs, fixedRegSize, varGenotypic, varResidual, chainLength, burnIn, outputFreq, onScreen)
+function bayesPR2(randomEffects, centered, phenoTrain, weights, locusID, userMapData, chrs, fixedRegSize, varGenotypic, varResidual, chainLength, burnIn, outputFreq, onScreen)
     println("I am here")
-    SNPgroups  = prep2RegionData(snpInfo, chrs, geno4Map, fixedRegSize)
+    SNPgroups  = prepRegionData(userMapData, chrs, locusID, fixedRegSize)
     these2Keep = collect((burnIn+outputFreq):outputFreq:chainLength) #print these iterations
     nRegions    = length(SNPgroups)
     println("number of regions: ", nRegions)
@@ -362,8 +362,10 @@ function bayesPR2(randomEffects, centered, phenoTrain, geno4Map, snpInfo, chrs, 
     nRecords = size(phenoTrain,1)
     println("number of markers: ", nMarkers)
     println("number of records: ", nRecords)
+    
+    
     nRandComp = length(split(randomEffects, " "))
-    sum2pq = Array{Float64}(3)
+    sum2pq = Array{Float64}(nRandComp)
 
     for i in 1:nRandComp
         this = split(randomEffects, " ")[i]
@@ -460,13 +462,15 @@ function bayesPR2(randomEffects, centered, phenoTrain, geno4Map, snpInfo, chrs, 
                 BLAS.axpy!(view(tempBetaMat,1,locus),view(M1,:,locus),ycorr)
                 BLAS.axpy!(view(tempBetaMat,2,locus),view(M2,:,locus),ycorr)
                 BLAS.axpy!(view(tempBetaMat,3,locus),view(M3,:,locus),ycorr)
-                rhs = [dot(view(M1,:,locus),ycorr) ; dot(view(M2,:,locus),ycorr) ; dot(view(M3,:,locus),ycorr)]*iVarE
+                BLAS.axpy!(view(tempBetaMat,4,locus),view(M3,:,locus),ycorr)
+                rhs = [dot(view(M1,:,locus),ycorr) ; dot(view(M2,:,locus),ycorr) ; dot(view(M3,:,locus),ycorr) ; dot(view(M4,:,locus),ycorr)]*iVarE
                 invLhs   = inv(MpM[locus]*iVarE + invB)
                 meanBeta = invLhs*rhs
                 tempBetaMat[:,locus] = rand(MvNormal(meanBeta,convert(Array,Symmetric(invLhs))))
                 BLAS.axpy!(-1*view(tempBetaMat,1,locus),view(M1,:,locus),ycorr)
                 BLAS.axpy!(-1*view(tempBetaMat,2,locus),view(M2,:,locus),ycorr)
                 BLAS.axpy!(-1*view(tempBetaMat,3,locus),view(M3,:,locus),ycorr)
+                BLAS.axpy!(-1*view(tempBetaMat,4,locus),view(M3,:,locus),ycorr)
             end
 #            Random.seed!(iter)
 #            covBeta[r] = sampleCovBeta(dfβ,regionSize,Vb,tempBetaMat,theseLoci)
@@ -819,4 +823,10 @@ end
 function sampleCovBeta(dfβ, regionSize, Vb , tempBetaMat, theseLoci)
     Sb = tempBetaMat[:,theseLoci]*tempBetaMat[:,theseLoci]'
     return rand(InverseWishart(dfβ + regionSize, Vb + Sb))
+end
+
+###Experimental iW ____ ALMOST DOUBLED THE SPEED
+function sampleCovBeta_iW(dfβ, regionSize, Vb , tempBetaMat, theseLoci)
+    Sb = tempBetaMat[:,theseLoci]*tempBetaMat[:,theseLoci]'
+    return inv(rand(Wishart(dfβ + regionSize, convert(Array,Symmetric(inv(Vb + Sb))))))
 end
