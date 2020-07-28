@@ -351,6 +351,135 @@ function bayesPR2_b(randomEffects, centered, phenoTrain, weights, locusID, userM
     GC.gc()
 end
 
+#one trait multiple components, correlated
+function bayesPR2(randomEffects, centered, phenoTrain, geno4Map, snpInfo, chrs, fixedRegSize, varGenotypic, varResidual, chainLength, burnIn, outputFreq, onScreen)
+    println("I am here")
+    SNPgroups  = prep2RegionData(snpInfo, chrs, geno4Map, fixedRegSize)
+    these2Keep = collect((burnIn+outputFreq):outputFreq:chainLength) #print these iterations
+    nRegions    = length(SNPgroups)
+    println("number of regions: ", nRegions)
+    nMarkers = length(vcat(SNPgroups...))
+    nRecords = size(phenoTrain,1)
+    println("number of markers: ", nMarkers)
+    println("number of records: ", nRecords)
+    nRandComp = length(split(randomEffects, " "))
+    sum2pq = Array{Float64}(3)
+
+    for i in 1:nRandComp
+        this = split(randomEffects, " ")[i]
+        println(this)
+        @eval $(Symbol("M$i")) = convert(Array{Float64},eval(Symbol("$(split(randomEffects, " ")[$i])")))
+
+        if centered==0
+            p           = mean(eval(Symbol("M$i")),dims=1)./2.0
+            sum2pq[i]   = sum(2*(1 .- p).*p)
+
+            nowM   = eval(Symbol("M$i"))
+            nowM .-= ones(Float64,nRecords)*2p
+            @eval $(Symbol("M$i")) = $nowM
+            else sum2pq[i] = centered[i]
+        end
+        println(@eval $(Symbol("M$i"))[1:3,1:3])
+    end
+    nowM = 0
+  println(whos())
+ 
+#    M = []
+    MpM = []
+    for j in 1:nMarkers
+        tempM = Array{Float64}(nRecords,0)
+        for k in 1:nRandComp
+            nowM  = @eval $(Symbol("M$k"))
+            tempM = convert(Array{Float64},hcat(tempM,nowM[:,j]))
+        end
+#        M = push!(M,tempM)
+        MpM = push!(MpM,tempM'tempM)
+    end
+    nowM  = 0
+    tempM = 0
+       
+    fileControlSt2(fixedRegSize)
+
+    #priors
+    dfEffectVar = 3.0
+    dfRes       = 4.0
+    
+    const    dfβ    = dfEffectVar + nRandComp
+    
+ #   mat2pq = sqrt.(sum2pq*sum2pq')
+    mat2pq = centered   
+
+    if varGenotypic==0.0
+        covBeta  = fill(full(Diagonal(fill((dfβ-nRandComp-1).*0.001,nRandComp))),nRegions)
+        Vb       = covBeta[1]
+        else
+        covBeta  = fill(varGenotypic./mat2pq,nRegions)
+        Vb       = covBeta[1].*(dfβ-nRandComp-1)
+    end
+   
+    #to avoide singularity in inv(covBeta[r]) for the first iteration
+    #this is just the initial (starting) value
+    covBeta  = fill(full(Diagonal(covBeta[1])),nRegions)
+
+    if varResidual==0.0
+        varResidual  = 0.0005
+        scaleRes     = 0.0005
+        else
+        scaleRes    = varResidual*(dfRes-2.0)/dfRes    
+    end
+    
+    y           = convert(Array{Float64}, phenoTrain)        
+   
+    #precomputation of vsE for convenience
+    νS_e            = scaleRes*dfRes
+    df_e            = dfRes
+    #initial values as "0"
+    tempBetaMat     = zeros(Float64,nRandComp,nMarkers)
+    μ               = mean(y)
+    
+    ycorr           = y .- μ
+    
+    #MCMC starts here
+    for iter in 1:chainLength
+        #sample residual variance
+        varE = sampleVarE(νS_e,ycorr,df_e,nRecords)
+        iVarE = 1/varE
+        #sample intercept
+        ycorr  .+= μ
+        rhs      = sum(ycorr)
+        invLhs   = 1.0/nRecords
+        meanMu   = rhs*invLhs
+        μ        = rand(Normal(meanMu,sqrt(invLhs*varE)))
+        ycorr  .-= μ
+        for r in 1:nRegions
+            theseLoci = SNPgroups[r]
+            regionSize = length(theseLoci)
+            invB = inv(covBeta[r]) ###################check this
+            for locus in theseLoci::UnitRange{Int64}
+#                sampleCorRandomBeta!(M,MpM,tempBetaMat,locus,ycorr,varE,invB)
+                BLAS.axpy!(view(tempBetaMat,1,locus),view(M1,:,locus),ycorr)
+                BLAS.axpy!(view(tempBetaMat,2,locus),view(M2,:,locus),ycorr)
+                BLAS.axpy!(view(tempBetaMat,3,locus),view(M3,:,locus),ycorr)
+                rhs = [dot(view(M1,:,locus),ycorr) ; dot(view(M2,:,locus),ycorr) ; dot(view(M3,:,locus),ycorr)]*iVarE
+                invLhs   = inv(MpM[locus]*iVarE + invB)
+                meanBeta = invLhs*rhs
+                tempBetaMat[:,locus] = rand(MvNormal(meanBeta,convert(Array,Symmetric(invLhs))))
+                BLAS.axpy!(-1*view(tempBetaMat,1,locus),view(M1,:,locus),ycorr)
+                BLAS.axpy!(-1*view(tempBetaMat,2,locus),view(M2,:,locus),ycorr)
+                BLAS.axpy!(-1*view(tempBetaMat,3,locus),view(M3,:,locus),ycorr)
+            end
+#            Random.seed!(iter)
+#            covBeta[r] = sampleCovBeta(dfβ,regionSize,Vb,tempBetaMat,theseLoci)
+#            println(covBeta[r])
+#            Random.seed!(iter)
+            covBeta[r] = sampleCovBeta_iW(dfβ,regionSize,Vb,tempBetaMat,theseLoci)
+#            println(covBeta[r])
+        end
+        outputControl2(nRandComp,onScreen,iter,these2Keep,tempBetaMat,μ,covBeta,varE,fixedRegSize,nRegions)
+    end
+    GC.gc()
+end
+
 #one trait multiple components
 function bayesPR2_b_withBP(randomEffects, centered, phenoTrain, breedProp, weights, locusID, userMapData, chrs, fixedRegSize, varGenotypic, varResidual, chainLength, burnIn, outputFreq, onScreen)
     println("I am here")
