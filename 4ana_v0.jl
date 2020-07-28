@@ -471,7 +471,7 @@ function bayesPR2(randomEffects, centered, phenoTrain, weights, locusID, userMap
                 BLAS.axpy!(view(tempBetaMat,1,locus),view(M1,:,locus),ycorr)
                 BLAS.axpy!(view(tempBetaMat,2,locus),view(M2,:,locus),ycorr)
                 BLAS.axpy!(view(tempBetaMat,3,locus),view(M3,:,locus),ycorr)
-                BLAS.axpy!(view(tempBetaMat,4,locus),view(M3,:,locus),ycorr)
+                BLAS.axpy!(view(tempBetaMat,4,locus),view(M4,:,locus),ycorr)
                 rhs = [BLAS.dot(view(M1piD,:,locus),ycorr) ; BLAS.dot(view(M2piD,:,locus),ycorr) ; BLAS.dot(view(M3piD,:,locus),ycorr) ; BLAS.dot(view(M4piD,:,locus),ycorr)]*iVarE
                 invLhs   = inv(MpM[locus]*iVarE + invB)
                 meanBeta = invLhs*rhs
@@ -479,7 +479,7 @@ function bayesPR2(randomEffects, centered, phenoTrain, weights, locusID, userMap
                 BLAS.axpy!(-1*view(tempBetaMat,1,locus),view(M1,:,locus),ycorr)
                 BLAS.axpy!(-1*view(tempBetaMat,2,locus),view(M2,:,locus),ycorr)
                 BLAS.axpy!(-1*view(tempBetaMat,3,locus),view(M3,:,locus),ycorr)
-                BLAS.axpy!(-1*view(tempBetaMat,4,locus),view(M3,:,locus),ycorr)
+                BLAS.axpy!(-1*view(tempBetaMat,4,locus),view(M4,:,locus),ycorr)
             end
 #            Random.seed!(iter)
 #            covBeta[r] = sampleCovBeta(dfβ,regionSize,Vb,tempBetaMat,theseLoci)
