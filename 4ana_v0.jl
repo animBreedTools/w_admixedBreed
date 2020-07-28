@@ -362,8 +362,10 @@ function bayesPR2(randomEffects, centered, phenoTrain, weights, locusID, userMap
     nRecords = size(phenoTrain,1)
     println("number of markers: ", nMarkers)
     println("number of records: ", nRecords)
-    
-    
+   
+    w           = convert(Array{Float64}, weights)
+    iD          = full(Diagonal(w))  # Dii is 1/wii=1/(r2/(1-r2))==> Dii is (1-r2)/r2 ==> iDii is r2/(1-r2)
+
     nRandComp = length(split(randomEffects, " "))
     sum2pq = Array{Float64}(nRandComp)
 
@@ -384,17 +386,15 @@ function bayesPR2(randomEffects, centered, phenoTrain, weights, locusID, userMap
         println(@eval $(Symbol("M$i"))[1:3,1:3])
     end
     nowM = 0
-  println(whos())
  
-#    M = []
+    sqrtW = sqrt.(w) ####for having M1piDM1 as well as M1piDM2....
     MpM = []
     for j in 1:nMarkers
         tempM = Array{Float64}(nRecords,0)
         for k in 1:nRandComp
             nowM  = @eval $(Symbol("M$k"))
-            tempM = convert(Array{Float64},hcat(tempM,nowM[:,j]))
+            tempM = convert(Array{Float64},hcat(tempM,nowM[:,j].*sqrtW)) ###sqrtW here
         end
-#        M = push!(M,tempM)
         MpM = push!(MpM,tempM'tempM)
     end
     nowM  = 0
@@ -438,13 +438,22 @@ function bayesPR2(randomEffects, centered, phenoTrain, weights, locusID, userMap
     #initial values as "0"
     tempBetaMat     = zeros(Float64,nRandComp,nMarkers)
     μ               = mean(y)
-    
+    ##########
+#    m1piDm1         = diag((M1.*w)'*M1)  #w[i] is already iD[i,i]
+    M1piD           = iD*M1        #this is to iterate over columns in the body "dot(view(XpiD,:,l),ycorr)"
+#    m2piDm2         = diag((M2.*w)'*M2) #I do it up with push!
+    M2piD           = iD*M2
+#    m3piDm3         = diag((M3.*w)'*M3)
+    M3piD           = iD*M3
+#    m4piDm4         = diag((M4.*w)'*M4)
+    M4piD           = iD*M4
+    ##########    
     ycorr           = y .- μ
     
     #MCMC starts here
     for iter in 1:chainLength
         #sample residual variance
-        varE = sampleVarE(νS_e,ycorr,df_e,nRecords)
+        varE = sampleVarE_w(νS_e,ycorr,w,df_e,nRecords)
         iVarE = 1/varE
         #sample intercept
         ycorr  .+= μ
@@ -463,7 +472,7 @@ function bayesPR2(randomEffects, centered, phenoTrain, weights, locusID, userMap
                 BLAS.axpy!(view(tempBetaMat,2,locus),view(M2,:,locus),ycorr)
                 BLAS.axpy!(view(tempBetaMat,3,locus),view(M3,:,locus),ycorr)
                 BLAS.axpy!(view(tempBetaMat,4,locus),view(M3,:,locus),ycorr)
-                rhs = [dot(view(M1,:,locus),ycorr) ; dot(view(M2,:,locus),ycorr) ; dot(view(M3,:,locus),ycorr) ; dot(view(M4,:,locus),ycorr)]*iVarE
+                rhs = [BLAS.dot(view(M1piD,:,locus),ycorr) ; BLAS.dot(view(M2piD,:,locus),ycorr) ; BLAS.dot(view(M3piD,:,locus),ycorr) ; BLAS.dot(view(M4piD,:,locus),ycorr)]*iVarE
                 invLhs   = inv(MpM[locus]*iVarE + invB)
                 meanBeta = invLhs*rhs
                 tempBetaMat[:,locus] = rand(MvNormal(meanBeta,convert(Array,Symmetric(invLhs))))
