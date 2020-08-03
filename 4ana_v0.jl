@@ -249,11 +249,12 @@ function bayesPR2_b(randomEffects, centered, phenoTrain, weights, locusID, userM
     mat2pq = centered 
 
     if varGenotypic==0.0
-        covBeta  = fill(full(Diagonal(fill((dfβ-nRandComp-1).*0.001,nRandComp))),nRegions)
+#        covBeta  = fill(full(Diagonal(fill((dfβ-nRandComp-1).*0.001,nRandComp))),nRegions)
+        covBeta  = fill(full(Diagonal(varB)),nRegions) #I added the use of varB here
         Vb       = covBeta[1]
+        println("prior varB: $Vb")
         else
-   #WORKS with varG     covBeta  = fill(full(Diagonal(varGenotypic./mat2pq)),nRegions) ##Array of arrays. covBeta[1] is the array for first region. It is not variance for 1,1
-        covBeta  = fill(full(Diagonal(varB)),nRegions) ##Array of arrays. covBeta[1] is the array for first region. It is not variance for 1,1
+        covBeta  = fill(full(Diagonal(varGenotypic./mat2pq)),nRegions) ##Array of arrays. covBeta[1] is the array for first region. It is not variance for 1,1
         Vb       = covBeta[1].*(dfβ-nRandComp-1)
     end
     
@@ -413,11 +414,12 @@ function bayesPR2(randomEffects, centered, phenoTrain, weights, locusID, userMap
     mat2pq = centered   
 
     if varGenotypic==0.0
-        covBeta  = fill(full(Diagonal(fill((dfβ-nRandComp-1).*0.001,nRandComp))),nRegions)
+ #       covBeta  = fill(full(Diagonal(fill((dfβ-nRandComp-1).*0.001,nRandComp))),nRegions)
+        covBeta  = fill(full(Diagonal(varB)),nRegions) #I added the use of varB here
         Vb       = covBeta[1]
+        println("prior varB: $Vb")
         else
-#WORKS with varG        covBeta  = fill(varGenotypic./mat2pq,nRegions)
-        covBeta  = fill(varB,nRegions)
+        varG        covBeta  = fill(varGenotypic./mat2pq,nRegions)
         Vb       = covBeta[1].*(dfβ-nRandComp-1)
     end
    
