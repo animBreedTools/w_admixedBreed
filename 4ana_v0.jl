@@ -191,7 +191,7 @@ function w_bayesPR_BlockedGS(genoTrain, phenoTrain, breedProp, weights, userMapD
 end
 
 #one trait multiple components
-function bayesPR2_b(randomEffects, centered, phenoTrain, weights, locusID, userMapData, chrs, fixedRegSize, varGenotypic, varResidual, chainLength, burnIn, outputFreq, onScreen)
+function bayesPR2_b(randomEffects, centered, phenoTrain, weights, locusID, userMapData, chrs, fixedRegSize, varGenotypic, varB, varResidual, chainLength, burnIn, outputFreq, onScreen)
     println("I am here")
     SNPgroups  = prepRegionData(userMapData, chrs, locusID, fixedRegSize)
     these2Keep = collect((burnIn+outputFreq):outputFreq:chainLength) #print these iterations
@@ -252,7 +252,8 @@ function bayesPR2_b(randomEffects, centered, phenoTrain, weights, locusID, userM
         covBeta  = fill(full(Diagonal(fill((dfβ-nRandComp-1).*0.001,nRandComp))),nRegions)
         Vb       = covBeta[1]
         else
-        covBeta  = fill(full(Diagonal(varGenotypic./mat2pq)),nRegions) ##Array of arrays. covBeta[1] is the array for first region. It is not variance for 1,1
+   #WORKS with varG     covBeta  = fill(full(Diagonal(varGenotypic./mat2pq)),nRegions) ##Array of arrays. covBeta[1] is the array for first region. It is not variance for 1,1
+        covBeta  = fill(full(Diagonal(varB)),nRegions) ##Array of arrays. covBeta[1] is the array for first region. It is not variance for 1,1
         Vb       = covBeta[1].*(dfβ-nRandComp-1)
     end
     
@@ -352,7 +353,7 @@ function bayesPR2_b(randomEffects, centered, phenoTrain, weights, locusID, userM
 end
 
 #one trait multiple components, correlated
-function bayesPR2(randomEffects, centered, phenoTrain, weights, locusID, userMapData, chrs, fixedRegSize, varGenotypic, varResidual, chainLength, burnIn, outputFreq, onScreen)
+function bayesPR2(randomEffects, centered, phenoTrain, weights, locusID, userMapData, chrs, fixedRegSize, varGenotypic, varB, varResidual, chainLength, burnIn, outputFreq, onScreen)
     println("I am here")
     SNPgroups  = prepRegionData(userMapData, chrs, locusID, fixedRegSize)
     these2Keep = collect((burnIn+outputFreq):outputFreq:chainLength) #print these iterations
@@ -415,7 +416,8 @@ function bayesPR2(randomEffects, centered, phenoTrain, weights, locusID, userMap
         covBeta  = fill(full(Diagonal(fill((dfβ-nRandComp-1).*0.001,nRandComp))),nRegions)
         Vb       = covBeta[1]
         else
-        covBeta  = fill(varGenotypic./mat2pq,nRegions)
+#WORKS with varG        covBeta  = fill(varGenotypic./mat2pq,nRegions)
+        covBeta  = fill(varB,nRegions)
         Vb       = covBeta[1].*(dfβ-nRandComp-1)
     end
    
