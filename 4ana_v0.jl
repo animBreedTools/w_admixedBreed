@@ -419,7 +419,7 @@ function bayesPR2(randomEffects, centered, phenoTrain, weights, locusID, userMap
         Vb       = covBeta[1]
         println("prior varB: $Vb")
         else
-        varG        covBeta  = fill(varGenotypic./mat2pq,nRegions)
+        covBeta  = fill(varGenotypic./mat2pq,nRegions)
         Vb       = covBeta[1].*(dfβ-nRandComp-1)
     end
    
