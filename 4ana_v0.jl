@@ -191,7 +191,7 @@ function w_bayesPR_BlockedGS(genoTrain, phenoTrain, breedProp, weights, userMapD
 end
 
 #one trait multiple components
-function bayesPR2_b(randomEffects, centered, phenoTrain, weights, locusID, userMapData, chrs, fixedRegSize, varGenotypic, varB, varResidual, chainLength, burnIn, outputFreq, onScreen)
+function bayesPR2_b(breedProp,randomEffects, centered, phenoTrain, weights, locusID, userMapData, chrs, fixedRegSize, varGenotypic, varB, varResidual, chainLength, burnIn, outputFreq, onScreen)
     println("I am here")
     SNPgroups  = prepRegionData(userMapData, chrs, locusID, fixedRegSize)
     these2Keep = collect((burnIn+outputFreq):outputFreq:chainLength) #print these iterations
@@ -288,19 +288,33 @@ function bayesPR2_b(randomEffects, centered, phenoTrain, weights, locusID, userM
 #    m4piDm4         = diag((M4.*w)'*M4)
     M4piD           = iD*M4
     ##########
-    ycorr           = y .- μ
     
+    #Can use equal numbers as this is just starting value!
+    breedProp = convert(Array{Float64},breedProp)
+    F = copy(breedProp)
+    F .-=  mean(breedProp,1)
+    F = [ones(nRecords) F]
+    
+    #blocked sampler
+    invFpiDF        = inv((F.*w)'*F)  #w[i] is already iD[i,i]
+    FpiD            = F'iD        #this is to iterate over columns in the body "dot(view(XpiD,:,l),ycorr)" already transposed    
+    f               = [μ; mean(y .- μ)*vec(mean(breedProp,1))]
+    ycorr           = y - F*f
+    GC.gc()
+      
     #MCMC starts here
     for iter in 1:chainLength
         #sample residual variance
         varE = sampleVarE_w(νS_e,ycorr,w,df_e,nRecords)
-        #sample intercept
-        ycorr  .+= μ
-        rhs      = sum(ycorr)
-        invLhs   = 1.0/nRecords
-        meanMu   = rhs*invLhs
-        μ        = rand(Normal(meanMu,sqrt(invLhs*varE)))
-        ycorr  .-= μ
+        
+        #sample fixed effects, blocked gibbs sampling    
+        ycorr    .+= F*f
+        rhs      = view(FpiD,:,:)*ycorr
+        invLhs   = view(invFpiDF,:,:)
+        meanMu   = invLhs*rhs
+        f       .= rand(MvNormal(meanMu,convert(Array,Symmetric(invLhs*varE))))
+        ycorr    .-= F*f
+        
         for r in 1:nRegions
             theseLoci = SNPgroups[r]
             regionSize = length(theseLoci)
@@ -348,7 +362,7 @@ function bayesPR2_b(randomEffects, centered, phenoTrain, weights, locusID, userM
 
             covBeta[r]      = [cov1 0 0 0; 0 cov2 0 0; 0 0 cov3 0; 0 0 0 cov4]
         end
-        outputControl2(nRandComp,onScreen,iter,these2Keep,tempBetaMat,μ,covBeta,varE,fixedRegSize,nRegions)
+        outputControl2(nRandComp,onScreen,iter,these2Keep,tempBetaMat,f',covBeta,varE,fixedRegSize,nRegions)
     end
     GC.gc()
 end
@@ -415,7 +429,7 @@ function bayesPR2(breedProp, randomEffects, centered, phenoTrain, weights, locus
 
     if varGenotypic==0.0
  #       covBeta  = fill(full(Diagonal(fill((dfβ-nRandComp-1).*0.001,nRandComp))),nRegions)
-        covBeta  = fill(full(Diagonal(varB)),nRegions) #I added the use of varB here
+        covBeta  = fill(varB,nRegions) #I added the use of varB here
         Vb       = covBeta[1]
         println("prior varB: $Vb")
         else
@@ -472,7 +486,7 @@ function bayesPR2(breedProp, randomEffects, centered, phenoTrain, weights, locus
         varE = sampleVarE_w(νS_e,ycorr,w,df_e,nRecords)
         iVarE = 1/varE
         
-        #sample fixed effects, single-site gibbs sampling    
+        #sample fixed effects, blocked gibbs sampling    
         ycorr    .+= F*f
         rhs      = view(FpiD,:,:)*ycorr
         invLhs   = view(invFpiDF,:,:)
