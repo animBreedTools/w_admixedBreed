@@ -243,7 +243,7 @@ function bayesPR2_b(randomEffects, centered, phenoTrain, weights, locusID, userM
     dfEffectVar = 4.0  #noCor
     dfRes       = 4.0
     
-    const    dfβ    = dfEffectVar + nRandComp
+    dfβ    = dfEffectVar + nRandComp
     
 #    mat2pq = sqrt.(sum2pq*sum2pq')
     mat2pq = centered 
@@ -411,7 +411,7 @@ function bayesPR2(randomEffects, centered, phenoTrain, weights, locusID, userMap
     dfEffectVar = 3.0
     dfRes       = 4.0
     
-    const    dfβ    = dfEffectVar + nRandComp
+    dfβ    = dfEffectVar + nRandComp
     
  #   mat2pq = sqrt.(sum2pq*sum2pq')
     mat2pq = centered   
