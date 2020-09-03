@@ -369,7 +369,7 @@ function bayesPR2(randomEffects, centered, phenoTrain, weights, locusID, userMap
     println("number of records: ", nRecords)
    
     w           = convert(Array{Float64}, weights)
-    iD          = full(Diagonal(w))  # Dii is 1/wii=1/(r2/(1-r2))==> Dii is (1-r2)/r2 ==> iDii is r2/(1-r2)
+    iD          = Matrix(Diagonal(w))  # Dii is 1/wii=1/(r2/(1-r2))==> Dii is (1-r2)/r2 ==> iDii is r2/(1-r2)
 
     nRandComp = length(split(randomEffects, " "))
     sum2pq = Array{Float64}(nRandComp)
@@ -417,7 +417,7 @@ function bayesPR2(randomEffects, centered, phenoTrain, weights, locusID, userMap
     mat2pq = centered   
 
     if varGenotypic==0.0
- #       covBeta  = fill(full(Diagonal(fill((dfβ-nRandComp-1).*0.001,nRandComp))),nRegions)
+ #       covBeta  = fill(Matrix(Diagonal(fill((dfβ-nRandComp-1).*0.001,nRandComp))),nRegions)
         covBeta  = fill(varB,nRegions) #I added the use of varB here
         Vb       = covBeta[1]
         println("prior varB: $Vb")
@@ -428,7 +428,7 @@ function bayesPR2(randomEffects, centered, phenoTrain, weights, locusID, userMap
    
     #to avoide singularity in inv(covBeta[r]) for the first iteration
     #this is just the initial (starting) value
-    covBeta  = fill(full(Diagonal(covBeta[1])),nRegions)
+    covBeta  = fill(Matrix(Diagonal(covBeta[1])),nRegions)
 
     if varResidual==0.0
         varResidual  = 0.0005
