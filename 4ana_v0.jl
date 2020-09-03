@@ -206,7 +206,7 @@ function bayesPR2_b(randomEffects, centered, phenoTrain, weights, locusID, userM
     iD          = Matrix(Diagonal(w))  # Dii is 1/wii=1/(r2/(1-r2))==> Dii is (1-r2)/r2 ==> iDii is r2/(1-r2)
 
     nRandComp = length(split(randomEffects, " "))
-    sum2pq = Array{Float64}(nRandComp)
+    sum2pq = Array{Float64}(undef,nRandComp)
     
     for i in 1:nRandComp
         this = split(randomEffects, " ")[i]
@@ -372,7 +372,7 @@ function bayesPR2(randomEffects, centered, phenoTrain, weights, locusID, userMap
     iD          = Matrix(Diagonal(w))  # Dii is 1/wii=1/(r2/(1-r2))==> Dii is (1-r2)/r2 ==> iDii is r2/(1-r2)
 
     nRandComp = length(split(randomEffects, " "))
-    sum2pq = Array{Float64}(nRandComp)
+    sum2pq = Array{Float64}(undef,nRandComp)
 
     for i in 1:nRandComp
         this = split(randomEffects, " ")[i]
