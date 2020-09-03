@@ -512,7 +512,7 @@ function prepRegionData(userMapData,chrs,locusID,fixedRegSize)
     #for Ana's map
     mapData = userMapData
     #
-    rename!(mapData , names(mapData), headMap)
+    rename!(mapData, headMap)
     print(mapData[1:5,:])
     print(mapData[1:10,:])
     ###
