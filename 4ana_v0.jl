@@ -516,7 +516,7 @@ function prepRegionData(userMapData,chrs,locusID,fixedRegSize)
     print(mapData[1:5,:])
     print(mapData[1:10,:])
     ###
-    mapData = mapData[mapData[:chrID] .<= chrs,:]
+    mapData = mapData[mapData[!,:chrID] .<= chrs,:]
     # if first col in genoTrain is ID
     # I find cols that are in mapData (<chrs), and select those
     usedLoci = intersect(Symbol.(locusID),Symbol.(mapData[!,:snpID]))
