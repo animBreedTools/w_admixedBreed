@@ -512,7 +512,7 @@ function prepRegionData(userMapData,chrs,locusID,fixedRegSize)
     #for Ana's map
     mapData = userMapData
     #
-    rename!(mapData, headMap)
+    rename!(mapData, headMap)     ############## names(mapData) removed ############
     print(mapData[1:5,:])
     print(mapData[1:10,:])
     ###
@@ -520,11 +520,9 @@ function prepRegionData(userMapData,chrs,locusID,fixedRegSize)
     # if first col in genoTrain is ID
     # I find cols that are in mapData (<chrs), and select those
     usedLoci = intersect(Symbol.(locusID),Symbol.(mapData[:snpID]))
-    mapData = mapData[[find(usedLoci[i].==Symbol.(mapData[:snpID]))[] for i in 1:length(usedLoci)],:] #trim map data
-#    genoX = genoTrain[vcat(Symbol("ID"),usedLoci)]    #trim genoData
-#     genoX = genoTrain[[1; [find(i -> i == j, names(genoTrain))[] for j in [Symbol(mapData[:snpID][i]) for i in 1:size(mapData,1)]]]]
-    #genoX = genoTrain[[find(i -> i == j, names(genoTrain))[] for j in [Symbol(mapData[:snpID][i]) for i in 1:size(mapData,1)]]]
-    #genoX = genoTrain
+    mapData = mapData[[findall(usedLoci[i].==Symbol.(mapData[:snpID]))[] for i in 1:length(usedLoci)],:] #trim map data  ######## find -> findall #########
+    println([findall(usedLoci[i].==Symbol.(mapData[:snpID]))[] for i in 1:length(usedLoci)])    ######## just added to check #######  
+
     totLoci = length(usedLoci) # first col is ID
     println("totalLoci in MAP: $totLoci")
     snpInfoFinal = DataFrame(Any, 0, 3)
