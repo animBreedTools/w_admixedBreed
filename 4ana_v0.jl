@@ -553,7 +553,7 @@ function prepRegionData(userMapData,chrs,locusID,fixedRegSize)
         end
         end  #ends if control flow
 #    print(snpInfoFinal)
-    writecsv("snpInfo",convert(Array,snpInfoFinal))
+    CSV.write("snpInfo",snpInfoFinal,header=false)
     for g in 1:accRegion
         push!(SNPgroups,searchsorted(snpInfoFinal[:,3], g))
     end
