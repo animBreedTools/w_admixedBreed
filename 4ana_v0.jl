@@ -393,14 +393,16 @@ function bayesPR2(randomEffects, centered, phenoTrain, weights, locusID, userMap
     nowM = 0
  
     sqrtW = sqrt.(w) ####for having M1piDM1 as well as M1piDM2....
-    global MpM = []
+    MpM = []
     for j in 1:nMarkers
         tempM = Array{Float64}(undef,nRecords,0)
         for k in 1:nRandComp
             nowM  = @eval $(Symbol("M$k"))
+            println("this is $j")
+            println("this is $(nowM[:,j])")
             tempM = convert(Array{Float64},hcat(tempM,nowM[:,j].*sqrtW)) ###sqrtW here
         end
-    global     MpM = push!(MpM,tempM'tempM)
+    MpM = push!(MpM,tempM'tempM)
     end
     nowM  = 0
     tempM = 0
