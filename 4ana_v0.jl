@@ -15,7 +15,7 @@ function w_bayesPR_shaoLei(genoTrain, phenoTrain, breedProp, weights, userMapDat
     println("y is this size", size(y))
     nTraits, nRecords , nMarkers   = size(y,2), size(y,1), size(X,2)
     w           = convert(Array{Float64}, weights)
-    iD          = full(Diagonal(w))  # Dii is 1/wii=1/(r2/(1-r2))==> Dii is (1-r2)/r2 ==> iDii is r2/(1-r2)
+    iD          = Matrix(Diagonal(w))  # Dii is 1/wii=1/(r2/(1-r2))==> Dii is (1-r2)/r2 ==> iDii is r2/(1-r2)
     fileControlSt(fixedRegSize)
     p           = mean(X,dims=1)./2.0
     sum2pq      = sum(2*(1 .- p).*p) 
@@ -108,7 +108,7 @@ function w_bayesPR_BlockedGS(genoTrain, phenoTrain, breedProp, weights, userMapD
     println("y is this size", size(y))
     nTraits, nRecords , nMarkers   = size(y,2), size(y,1), size(X,2)
     w           = convert(Array{Float64}, weights)
-    iD          = full(Diagonal(w))  # Dii is 1/wii=1/(r2/(1-r2))==> Dii is (1-r2)/r2 ==> iDii is r2/(1-r2)
+    iD          = Matrix(Diagonal(w))  # Dii is 1/wii=1/(r2/(1-r2))==> Dii is (1-r2)/r2 ==> iDii is r2/(1-r2)
     fileControlSt(fixedRegSize)
     p           = mean(X,dims=1)./2.0
     sum2pq      = sum(2*(1 .- p).*p) 
@@ -203,7 +203,7 @@ function bayesPR2_b(randomEffects, centered, phenoTrain, weights, locusID, userM
     println("number of records: ", nRecords)
     
     w           = convert(Array{Float64}, weights)
-    iD          = full(Diagonal(w))  # Dii is 1/wii=1/(r2/(1-r2))==> Dii is (1-r2)/r2 ==> iDii is r2/(1-r2)
+    iD          = Matrix(Diagonal(w))  # Dii is 1/wii=1/(r2/(1-r2))==> Dii is (1-r2)/r2 ==> iDii is r2/(1-r2)
 
     nRandComp = length(split(randomEffects, " "))
     sum2pq = Array{Float64}(nRandComp)
@@ -249,12 +249,12 @@ function bayesPR2_b(randomEffects, centered, phenoTrain, weights, locusID, userM
     mat2pq = centered 
 
     if varGenotypic==0.0
-#        covBeta  = fill(full(Diagonal(fill((dfβ-nRandComp-1).*0.001,nRandComp))),nRegions)
-        covBeta  = fill(full(Diagonal(varB)),nRegions) #I added the use of varB here
+#        covBeta  = fill(Matrix(Diagonal(fill((dfβ-nRandComp-1).*0.001,nRandComp))),nRegions)
+        covBeta  = fill(Matrix(Diagonal(varB)),nRegions) #I added the use of varB here
         Vb       = covBeta[1]
         println("prior varB: $Vb")
         else
-        covBeta  = fill(full(Diagonal(varGenotypic./mat2pq)),nRegions) ##Array of arrays. covBeta[1] is the array for first region. It is not variance for 1,1
+        covBeta  = fill(Matrix(Diagonal(varGenotypic./mat2pq)),nRegions) ##Array of arrays. covBeta[1] is the array for first region. It is not variance for 1,1
         Vb       = covBeta[1].*(dfβ-nRandComp-1)
     end
     
