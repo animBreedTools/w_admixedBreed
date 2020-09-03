@@ -532,7 +532,7 @@ function prepRegionData(userMapData,chrs,locusID,fixedRegSize)
         accRegion    = length(unique(mapData[!,:chrID]))
         elseif fixedRegSize==9999
             snpInfoFinal = mapData[:,[:snpID,:snpOrder,:chrID]]
-            snpInfoFinal[!,:chrID]  .= 1 #was ".=1"
+            snpInfoFinal[!,:chrID]  .= 1 #was "1"
             accRegion    = 1
         else
         for c in 1:chrs
