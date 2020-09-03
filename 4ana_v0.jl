@@ -478,7 +478,7 @@ function bayesPR2(randomEffects, centered, phenoTrain, weights, locusID, userMap
             invB = inv(covBeta[r]) ###################check this
             for locus in theseLoci::UnitRange{Int64}
 #                sampleCorRandomBeta!(M,MpM,tempBetaMat,locus,ycorr,varE,invB)
-                BLAS.axpy!(view(tempBetaMat,1,locus),view(M1,:,locus),ycorr)
+                BLAS.axpy!(view(tempBetaMat,1,locus)[],view(M1,:,locus),ycorr)
                 BLAS.axpy!(view(tempBetaMat,2,locus),view(M2,:,locus),ycorr)
                 BLAS.axpy!(view(tempBetaMat,3,locus),view(M3,:,locus),ycorr)
                 BLAS.axpy!(view(tempBetaMat,4,locus),view(M4,:,locus),ycorr)
