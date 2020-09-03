@@ -395,7 +395,7 @@ function bayesPR2(randomEffects, centered, phenoTrain, weights, locusID, userMap
     sqrtW = sqrt.(w) ####for having M1piDM1 as well as M1piDM2....
     MpM = []
     for j in 1:nMarkers
-        tempM = Array{Float64}(nRecords,0)
+        tempM = Array{Float64}(undef,nRecords,0)
         for k in 1:nRandComp
             nowM  = @eval $(Symbol("M$k"))
             tempM = convert(Array{Float64},hcat(tempM,nowM[:,j].*sqrtW)) ###sqrtW here
