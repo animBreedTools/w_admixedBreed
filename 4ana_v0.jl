@@ -310,33 +310,33 @@ function bayesPR2_b(randomEffects, centered, phenoTrain, weights, locusID, userM
             lambda = diag(varE./(covBeta[r]))
             for locus in theseLoci::UnitRange{Int64}
                 
-                BLAS.axpy!(view(tempBetaMat,1,locus),view(M1,:,locus),ycorr)
+                BLAS.axpy!(view(tempBetaMat,1,locus)[],view(M1,:,locus),ycorr)
                 rhs = BLAS.dot(view(M1piD,:,locus),ycorr)
                 lhs   = m1piDm1[locus] + lambda[1]
                 meanBeta = lhs\rhs
                 tempBetaMat[1,locus] = sampleBeta(meanBeta, lhs, varE)
-                BLAS.axpy!(-1*view(tempBetaMat,1,locus),view(M1,:,locus),ycorr)
+                BLAS.axpy!(-1*view(tempBetaMat,1,locus)[],view(M1,:,locus),ycorr)
                 
-                BLAS.axpy!(view(tempBetaMat,2,locus),view(M2,:,locus),ycorr)
+                BLAS.axpy!(view(tempBetaMat,2,locus)[],view(M2,:,locus),ycorr)
                 rhs = BLAS.dot(view(M2piD,:,locus),ycorr)
                 lhs   = m2piDm2[locus] + lambda[2]
                 meanBeta = lhs\rhs
                 tempBetaMat[2,locus] = sampleBeta(meanBeta, lhs, varE)
-                BLAS.axpy!(-1*view(tempBetaMat,2,locus),view(M2,:,locus),ycorr)
+                BLAS.axpy!(-1*view(tempBetaMat,2,locus)[],view(M2,:,locus),ycorr)
                 
-                BLAS.axpy!(view(tempBetaMat,3,locus),view(M3,:,locus),ycorr)
+                BLAS.axpy!(view(tempBetaMat,3,locus)[],view(M3,:,locus),ycorr)
                 rhs = BLAS.dot(view(M3piD,:,locus),ycorr)
                 lhs   = m3piDm3[locus] + lambda[3]
                 meanBeta = lhs\rhs
                 tempBetaMat[3,locus] = sampleBeta(meanBeta, lhs, varE)
-                BLAS.axpy!(-1*view(tempBetaMat,3,locus),view(M3,:,locus),ycorr)
+                BLAS.axpy!(-1*view(tempBetaMat,3,locus)[],view(M3,:,locus),ycorr)
 
-                BLAS.axpy!(view(tempBetaMat,4,locus),view(M4,:,locus),ycorr)
+                BLAS.axpy!(view(tempBetaMat,4,locus)[],view(M4,:,locus),ycorr)
                 rhs = BLAS.dot(view(M4piD,:,locus),ycorr)
                 lhs   = m4piDm4[locus] + lambda[4]
                 meanBeta = lhs\rhs
                 tempBetaMat[4,locus] = sampleBeta(meanBeta, lhs, varE)
-                BLAS.axpy!(-1*view(tempBetaMat,4,locus),view(M4,:,locus),ycorr)
+                BLAS.axpy!(-1*view(tempBetaMat,4,locus)[],view(M4,:,locus),ycorr)
 
                 
             end
@@ -478,18 +478,18 @@ function bayesPR2(randomEffects, centered, phenoTrain, weights, locusID, userMap
             invB = inv(covBeta[r]) ###################check this
             for locus in theseLoci::UnitRange{Int64}
 #                sampleCorRandomBeta!(M,MpM,tempBetaMat,locus,ycorr,varE,invB)
-                BLAS.axpy!(view(tempBetaMat,1,locus),view(M1,:,locus),ycorr)
-                BLAS.axpy!(view(tempBetaMat,2,locus),view(M2,:,locus),ycorr)
-                BLAS.axpy!(view(tempBetaMat,3,locus),view(M3,:,locus),ycorr)
-                BLAS.axpy!(view(tempBetaMat,4,locus),view(M4,:,locus),ycorr)
+                BLAS.axpy!(view(tempBetaMat,1,locus)[],view(M1,:,locus),ycorr)
+                BLAS.axpy!(view(tempBetaMat,2,locus)[],view(M2,:,locus),ycorr)
+                BLAS.axpy!(view(tempBetaMat,3,locus)[],view(M3,:,locus),ycorr)
+                BLAS.axpy!(view(tempBetaMat,4,locus)[],view(M4,:,locus),ycorr)
                 rhs = [BLAS.dot(view(M1piD,:,locus),ycorr) ; BLAS.dot(view(M2piD,:,locus),ycorr) ; BLAS.dot(view(M3piD,:,locus),ycorr) ; BLAS.dot(view(M4piD,:,locus),ycorr)]*iVarE
                 invLhs   = inv(MpM[locus]*iVarE + invB)
                 meanBeta = invLhs*rhs
                 tempBetaMat[:,locus] = rand(MvNormal(meanBeta,convert(Array,Symmetric(invLhs))))
-                BLAS.axpy!(-1*view(tempBetaMat,1,locus),view(M1,:,locus),ycorr)
-                BLAS.axpy!(-1*view(tempBetaMat,2,locus),view(M2,:,locus),ycorr)
-                BLAS.axpy!(-1*view(tempBetaMat,3,locus),view(M3,:,locus),ycorr)
-                BLAS.axpy!(-1*view(tempBetaMat,4,locus),view(M4,:,locus),ycorr)
+                BLAS.axpy!(-1*view(tempBetaMat,1,locus)[],view(M1,:,locus),ycorr)
+                BLAS.axpy!(-1*view(tempBetaMat,2,locus)[],view(M2,:,locus),ycorr)
+                BLAS.axpy!(-1*view(tempBetaMat,3,locus)[],view(M3,:,locus),ycorr)
+                BLAS.axpy!(-1*view(tempBetaMat,4,locus)[],view(M4,:,locus),ycorr)
             end
 #            Random.seed!(iter)
 #            covBeta[r] = sampleCovBeta(dfβ,regionSize,Vb,tempBetaMat,theseLoci)
