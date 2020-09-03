@@ -492,10 +492,10 @@ function bayesPR2(randomEffects, centered, phenoTrain, weights, locusID, userMap
                 BLAS.axpy!(-1*view(tempBetaMat,4,locus)[],view(M4,:,locus),ycorr)
             end
 #            Random.seed!(iter)
-#            covBeta[r] = sampleCovBeta(dfβ,regionSize,Vb,tempBetaMat,theseLoci)
+            covBeta[r] = sampleCovBeta(dfβ,regionSize,Vb,tempBetaMat,theseLoci)
 #            println(covBeta[r])
 #            Random.seed!(iter)
-            covBeta[r] = sampleCovBeta_iW(dfβ,regionSize,Vb,tempBetaMat,theseLoci)
+#            covBeta[r] = sampleCovBeta_iW(dfβ,regionSize,Vb,tempBetaMat,theseLoci)
 #            println(covBeta[r])
         end
         outputControl2(nRandComp,onScreen,iter,these2Keep,tempBetaMat,μ,covBeta,varE,fixedRegSize,nRegions)
