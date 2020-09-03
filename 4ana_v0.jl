@@ -398,8 +398,6 @@ function bayesPR2(randomEffects, centered, phenoTrain, weights, locusID, userMap
         tempM = Array{Float64}(undef,nRecords,0)
         for k in 1:nRandComp
             nowM  = @eval $(Symbol("M$k"))
-            println("this is $j")
-            println("this is $(nowM[:,j])")
             tempM = convert(Array{Float64},hcat(tempM,nowM[:,j].*sqrtW)) ###sqrtW here
         end
     MpM = push!(MpM,tempM'tempM)
