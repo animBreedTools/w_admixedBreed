@@ -620,19 +620,19 @@ end
 function outputControl2(nRandComp,onScreen,iter,these2Keep,tempBetaMat,μ,covBeta,varE,fixedRegSize,nRegions)
     if iter in these2Keep
         out0 = open(pwd()*"/muOut$fixedRegSize", "a")
-        CSV.write(out0, μ,header=false)
+        writedlm(out0, μ)
         close(out0)
         for t in 1:nRandComp
             out1 = open(pwd()*"/beta"*"$t"*"Out$fixedRegSize", "a")
-            CSV.write(out1, tempBetaMat[t,:]',header=false)
+            writedlm(out1, tempBetaMat[t,:]')
             close(out1)
         end
         outCov = open(pwd()*"/covBetaOut$fixedRegSize", "a")
         printThis = [vcat(covBeta[r]...) for r in 1:nRegions]'
-        CSV.write(outCov, printThis,header=false)
+        writedlm(outCov, printThis)
         close(outCov)
         out3 = open(pwd()*"/varEOut$fixedRegSize", "a")
-        CSV.write(out3, varE,header=false)
+        writedlm(out3, varE)
         close(out3)  
         if onScreen==true
             coVarBeta = cov(tempBetaMat')
