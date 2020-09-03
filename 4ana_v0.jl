@@ -192,7 +192,6 @@ end
 
 #one trait multiple components
 function bayesPR2_b(randomEffects, centered, phenoTrain, weights, locusID, userMapData, chrs, fixedRegSize, varGenotypic, varB, varResidual, chainLength, burnIn, outputFreq, onScreen)
-    println("I am here")
     SNPgroups  = prepRegionData(userMapData, chrs, locusID, fixedRegSize)
     these2Keep = collect((burnIn+outputFreq):outputFreq:chainLength) #print these iterations
     nRegions    = length(SNPgroups)
@@ -358,7 +357,6 @@ end
 
 #one trait multiple components, correlated
 function bayesPR2(randomEffects, centered, phenoTrain, weights, locusID, userMapData, chrs, fixedRegSize, varGenotypic, varB, varResidual, chainLength, burnIn, outputFreq, onScreen)
-    println("I am here")
     SNPgroups  = prepRegionData(userMapData, chrs, locusID, fixedRegSize)
     these2Keep = collect((burnIn+outputFreq):outputFreq:chainLength) #print these iterations
     nRegions    = length(SNPgroups)
