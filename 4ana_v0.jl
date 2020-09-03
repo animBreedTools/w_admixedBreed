@@ -519,9 +519,9 @@ function prepRegionData(userMapData,chrs,locusID,fixedRegSize)
     mapData = mapData[mapData[:chrID] .<= chrs,:]
     # if first col in genoTrain is ID
     # I find cols that are in mapData (<chrs), and select those
-    usedLoci = intersect(Symbol.(locusID),Symbol.(mapData[:snpID]))
-    mapData = mapData[[findall(usedLoci[i].==Symbol.(mapData[:snpID]))[] for i in 1:length(usedLoci)],:] #trim map data  ######## find -> findall #########
-    println([findall(usedLoci[i].==Symbol.(mapData[:snpID]))[] for i in 1:length(usedLoci)])    ######## just added to check #######  
+    usedLoci = intersect(Symbol.(locusID),Symbol.(mapData[!,:snpID]))
+    mapData = mapData[[findall(usedLoci[i].==Symbol.(mapData[!,:snpID]))[] for i in 1:length(usedLoci)],:] #trim map data  ######## find -> findall #########
+    println([findall(usedLoci[i].==Symbol.(mapData[!,:snpID]))[] for i in 1:length(usedLoci)])    ######## just added to check #######  
 
     totLoci = length(usedLoci) # first col is ID
     println("totalLoci in MAP: $totLoci")
@@ -529,14 +529,14 @@ function prepRegionData(userMapData,chrs,locusID,fixedRegSize)
     if fixedRegSize==99
         println("fixedRedSize $fixedRegSize")
         snpInfoFinal = mapData[:,[:snpID,:snpOrder,:chrID]]
-        accRegion    = length(unique(mapData[:chrID]))
+        accRegion    = length(unique(mapData[!,:chrID]))
         elseif fixedRegSize==9999
             snpInfoFinal = mapData[:,[:snpID,:snpOrder,:chrID]]
-            snpInfoFinal[:,:chrID]  = 1 #was ".=1"
+            snpInfoFinal[!,:chrID]  .= 1 #was ".=1"
             accRegion    = 1
         else
         for c in 1:chrs
-            thisChr = mapData[mapData[:chrID] .== c,:]
+            thisChr = mapData[mapData[!,:chrID] .== c,:]
             totLociChr = size(thisChr,1)
             TotRegions = ceil(Int,totLociChr/fixedRegSize)
             accRegion += TotRegions
@@ -544,7 +544,7 @@ function prepRegionData(userMapData,chrs,locusID,fixedRegSize)
             tempGroups = sort(repeat(collect(accRegionVec[c]+1:accRegionVec[c+1]),fixedRegSize))
             snpInfo = DataFrame(Any, length(tempGroups), 3)
             snpInfo[1:totLociChr,1] = collect(1:totLociChr)
-            snpInfo[1:totLociChr,2] = thisChr[:snpID]
+            snpInfo[1:totLociChr,2] = thisChr[!,:snpID]
             snpInfo[:,3] = tempGroups
             dropmissing!(snpInfo)
             snpInfoFinal = vcat(snpInfoFinal,snpInfo)
