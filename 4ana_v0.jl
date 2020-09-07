@@ -224,7 +224,7 @@ function bayesPR2_b(randomEffects, centered, phenoTrain, weights, locusID, userM
         println(@eval $(Symbol("M$i"))[1:3,1:3])
     end
     nowM = 0
-  println(whos()) 
+
     m1piDm1=[]
     m2piDm2=[]
     m3piDm3=[]
