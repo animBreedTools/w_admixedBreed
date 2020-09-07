@@ -528,7 +528,7 @@ function prepRegionData(userMapData,chrs,locusID,fixedRegSize)
     totLoci = size(mapData,1)
     
     println("totalLoci in MAP: $totLoci")
-    snpInfoFinal = DataFrame(Any, 0, 3)
+    snpInfoFinal = DataFrame([Vector{Any}(undef, 0) for i = 1:3])
     if fixedRegSize==99
         println("fixedRedSize $fixedRegSize")
         snpInfoFinal = mapData[:,[:snpID,:snpOrder,:chrID]]
