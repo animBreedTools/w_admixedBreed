@@ -517,11 +517,16 @@ function prepRegionData(userMapData,chrs,locusID,fixedRegSize)
     mapData = mapData[mapData[!,:chrID] .<= chrs,:]
     # if first col in genoTrain is ID
     # I find cols that are in mapData (<chrs), and select those
-    usedLoci = intersect(Symbol.(locusID),Symbol.(mapData[!,:snpID]))
-    mapData = mapData[[findall(usedLoci[i].==Symbol.(mapData[!,:snpID]))[] for i in 1:length(usedLoci)],:] #trim map data  ######## find -> findall #########
-    println([findall(usedLoci[i].==Symbol.(mapData[!,:snpID]))[] for i in 1:length(usedLoci)])    ######## just added to check #######  
+#    usedLoci = intersect(Symbol.(locusID),Symbol.(mapData[!,:snpID]))
+#    mapData = mapData[[findall(usedLoci[i].==Symbol.(mapData[!,:snpID]))[] for i in 1:length(usedLoci)],:] #trim map data  ######## find -> findall #########
+#    println([findall(usedLoci[i].==Symbol.(mapData[!,:snpID]))[] for i in 1:length(usedLoci)])    ######## just added to check #######  
+#    totLoci = length(usedLoci) # first col is ID
 
-    totLoci = length(usedLoci) # first col is ID
+    tempLocusID = DataFrame()
+    tempLocusID.snpID = locusID
+    mapData = rightjoin(mapData,tempLocusID,on=:snpID)
+    totLoci = size(mapData,1)
+    
     println("totalLoci in MAP: $totLoci")
     snpInfoFinal = DataFrame(Any, 0, 3)
     if fixedRegSize==99
