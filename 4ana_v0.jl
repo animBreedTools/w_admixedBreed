@@ -549,7 +549,7 @@ function prepRegionData(userMapData,chrs,locusID,fixedRegSize)
             snpInfo[1:totLociChr,1] = collect(1:totLociChr)
             snpInfo[1:totLociChr,2] = thisChr[!,:snpID]
             snpInfo[:,3] = tempGroups
-            snpInfo[[isassigned(snpInfo[:,1],i) for i in 1:size(snpInfo,1)],:]
+            snpInfo = snpInfo[[isassigned(snpInfo[:,1],i) for i in 1:size(snpInfo,1)],:]
             snpInfoFinal = vcat(snpInfoFinal,snpInfo)
             @printf("chr %.0f has %.0f groups \n", c, TotRegions)
             println(by(snpInfo, :x3, nrow)[:,2])
