@@ -665,6 +665,7 @@ function sampleVarE_w(νS_e,yCorVec,wVec,df_e,nRecords)
 end
 function sampleCovBeta(dfβ, regionSize, Vb , tempBetaMat, theseLoci)
     Sb = tempBetaMat[:,theseLoci]*tempBetaMat[:,theseLoci]'
+    println("Sb: $(Sb) \n Vb: $(Vb)")
     return rand(InverseWishart(dfβ + regionSize, Vb + Sb))
 end
 
