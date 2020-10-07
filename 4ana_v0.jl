@@ -251,7 +251,7 @@ function bayesPR2_b(randomEffects, centered, phenoTrain, weights, locusID, userM
 #        covBeta  = fill(Matrix(Diagonal(fill((dfβ-nRandComp-1).*0.001,nRandComp))),nRegions)
         covBeta  = fill(Matrix(Diagonal(varB)),nRegions) #I added the use of varB here
         Vb       = covBeta[1]
-#       println("prior varB: $Vb")
+       println("prior varB: $Vb")
         else
         covBeta  = fill(Matrix(Diagonal(varGenotypic./mat2pq)),nRegions) ##Array of arrays. covBeta[1] is the array for first region. It is not variance for 1,1
         Vb       = covBeta[1].*(dfβ-nRandComp-1)
@@ -418,7 +418,7 @@ function bayesPR2(randomEffects, centered, phenoTrain, weights, locusID, userMap
  #       covBeta  = fill(Matrix(Diagonal(fill((dfβ-nRandComp-1).*0.001,nRandComp))),nRegions)
         covBeta  = fill(varB,nRegions) #I added the use of varB here
         Vb       = covBeta[1]
- #       println("prior varB: $Vb")
+        println("prior varB: $Vb")
         else
         covBeta  = fill(varGenotypic./mat2pq,nRegions)
         Vb       = covBeta[1].*(dfβ-nRandComp-1)
@@ -665,7 +665,7 @@ function sampleVarE_w(νS_e,yCorVec,wVec,df_e,nRecords)
 end
 function sampleCovBeta(dfβ, regionSize, Vb , tempBetaMat, theseLoci)
     Sb = tempBetaMat[:,theseLoci]*tempBetaMat[:,theseLoci]'
-    println("Sb: $(Sb) \n Vb: $(Vb)")
+#    println("Sb: $(Sb) \n Vb: $(Vb)")
     return rand(InverseWishart(dfβ + regionSize, Vb + Sb))
 end
 
