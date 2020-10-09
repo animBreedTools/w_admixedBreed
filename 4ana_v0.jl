@@ -97,8 +97,8 @@ function w_bayesPR_shaoLei(genoTrain, phenoTrain, breedProp, weights, userMapDat
     end
 end
 
-function w_bayesPR_BlockedGS(genoTrain, phenoTrain, breedProp, weights, userMapData, chrs, fixedRegSize, varGenotypic, varResidual, chainLength, burnIn, outputFreq, onScreen)
-    SNPgroups = prepRegionData(userMapData, chrs, genoTrain, fixedRegSize)
+function w_bayesPR_BlockedGS(genoTrain, phenoTrain, breedProp, weights, locusID, userMapData, chrs, fixedRegSize, varGenotypic, varResidual, chainLength, burnIn, outputFreq, onScreen)
+    SNPgroups = prepRegionData(userMapData, chrs, locusID, fixedRegSize)
     these2Keep = collect((burnIn+outputFreq):outputFreq:chainLength) #print these iterations
     nRegions    = length(SNPgroups)
     println("number of regions: ", nRegions)
