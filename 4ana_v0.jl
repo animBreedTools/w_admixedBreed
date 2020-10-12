@@ -148,13 +148,13 @@ function w_bayesPR_BlockedGS(genoTrain, phenoTrain, breedProp, weights, locusID,
     #Can use equal numbers as this is just starting value!
     breedProp = convert(Array{Float64},breedProp)
     F = copy(breedProp)
-    F .-=  mean(breedProp,1)
+    F .-=  mean(breedProp,dims=1)
     F = [ones(nRecords) F]
     
     #blocked sampler
     invFpiDF        = inv((F.*w)'*F)  #w[i] is already iD[i,i]
     FpiD            = F'iD        #this is to iterate over columns in the body "dot(view(XpiD,:,l),ycorr)" already transposed    
-    f               = [μ; mean(y .- μ)*vec(mean(breedProp,1))]
+    f               = [μ; mean(y .- μ)*vec(mean(breedProp,dims=1))]
     ycorr           = y - F*f
     GC.gc()
     #MCMC starts here
