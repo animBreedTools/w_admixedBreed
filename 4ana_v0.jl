@@ -190,6 +190,99 @@ function w_bayesPR_BlockedGS(genoTrain, phenoTrain, breedProp, weights, locusID,
     end
 end
 
+function w_bayesPR_BlockedGS_dummy(genoTrain, phenoTrain, breedProp, weights, locusID, userMapData, chrs, fixedRegSize, varGenotypic, varResidual, chainLength, burnIn, outputFreq, onScreen)
+    SNPgroups = prepRegionData(userMapData, chrs, locusID, fixedRegSize)
+    these2Keep = collect((burnIn+outputFreq):outputFreq:chainLength) #print these iterations
+    nRegions    = length(SNPgroups)
+    println("number of regions: ", nRegions)
+    X           = convert(Array{Float64}, genoTrain)
+    println("X is this size", size(X))
+    y           = convert(Array{Float64}, phenoTrain)
+    println("y is this size", size(y))
+    nTraits, nRecords , nMarkers   = size(y,2), size(y,1), size(X,2)
+    w           = convert(Array{Float64}, weights)
+    iD          = Matrix(Diagonal(w))  # Dii is 1/wii=1/(r2/(1-r2))==> Dii is (1-r2)/r2 ==> iDii is r2/(1-r2)
+    fileControlSt(fixedRegSize)
+    p           = mean(X,dims=1)./2.0
+    sum2pq      = sum(2*(1 .- p).*p) 
+  
+    #priors
+    dfEffectVar = 4.0
+    dfRes       = 4.0
+
+    if varGenotypic==0.0
+        varBeta      = fill(0.0005, nRegions)
+        scaleVar     = 0.0005
+        else
+        varBeta      = fill(varGenotypic/sum2pq, nRegions)
+        scaleVar     = varBeta[1]*(dfEffectVar-2.0)/dfEffectVar
+    end
+    if varResidual==0.0
+        varResidual  = 0.0005
+        scaleRes     = 0.0005
+        else
+        scaleRes    = varResidual*(dfRes-2.0)/dfRes    
+    end
+    
+    #precomputation of vsB for convenience
+    νS_β            = scaleVar*dfEffectVar
+    df_β            = dfEffectVar
+    νS_e            = scaleRes*dfRes
+    df_e            = dfRes
+    #initial values as "0"
+    tempBetaVec     = zeros(Float64,nMarkers)
+    μ               = mean(y)
+    X              .-= ones(Float64,nRecords)*2p
+    xpiDx            = diag((X.*w)'*X)  #w[i] is already iD[i,i]
+    XpiD             = iD*X        #this is to iterate over columns in the body "dot(view(XpiD,:,l),ycorr)"
+    println("size of xpiDx $(size(xpiDx))")
+    println("size of XpiD $(size(XpiD))")
+    
+    #Can use equal numbers as this is just starting value!
+    breedProp = convert(Array{Float64},breedProp)
+    F = copy(breedProp)
+#    F .-=  mean(breedProp,dims=1)
+    F = [ones(nRecords) F]
+    
+    #blocked sampler
+    invFpiDF        = inv((F.*w)'*F)  #w[i] is already iD[i,i]
+    FpiD            = F'iD        #this is to iterate over columns in the body "dot(view(XpiD,:,l),ycorr)" already transposed    
+    f               = [μ; mean(y .- μ)*vec(mean(breedProp,dims=1))]
+    ycorr           = y - F*f
+    GC.gc()
+    #MCMC starts here
+    for iter in 1:chainLength
+        #sample residual variance
+        varE = sampleVarE_w(νS_e,ycorr,w,df_e,nRecords)
+        #sample fixed effects, single-site gibbs sampling
+        
+        ycorr    .+= F*f
+        rhs      = view(FpiD,:,:)*ycorr
+        invLhs   = view(invFpiDF,:,:)
+        meanMu   = invLhs*rhs
+        f       .= rand(MvNormal(meanMu,convert(Array,Symmetric(invLhs*varE))))
+        ycorr    .-= F*f
+    
+        
+        for r in 1:nRegions
+            theseLoci = SNPgroups[r]
+            regionSize = length(theseLoci)
+            λ_r = varE/varBeta[r]
+            for l in theseLoci::UnitRange{Int64}
+                BLAS.axpy!(tempBetaVec[l], view(X,:,l), ycorr)
+#                rhs = view(XpiD,:,l)'*ycorr
+                rhs = BLAS.dot(view(XpiD,:,l),ycorr)
+                lhs = xpiDx[l] + λ_r
+                meanBeta = lhs\rhs
+                tempBetaVec[l] = sampleBeta(meanBeta, lhs, varE)
+                BLAS.axpy!(-1*tempBetaVec[l], view(X,:,l), ycorr)
+            end
+            varBeta[r] = sampleVarBeta(νS_β,tempBetaVec[theseLoci],df_β,regionSize)
+        end
+        outputControlSt(onScreen,iter,these2Keep,X,tempBetaVec,f',varBeta,varE,fixedRegSize)
+    end
+end
+
 #one trait multiple components
 function bayesPR2_b(randomEffects, centered, phenoTrain, weights, locusID, userMapData, chrs, fixedRegSize, varGenotypic, varB, varResidual, chainLength, burnIn, outputFreq, onScreen)
     SNPgroups  = prepRegionData(userMapData, chrs, locusID, fixedRegSize)
