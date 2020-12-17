@@ -190,7 +190,7 @@ function w_bayesPR_BlockedGS(genoTrain, phenoTrain, breedProp, weights, locusID,
     end
 end
 
-function w_bayesPR_BlockedGS_dummy(genoTrain, phenoTrain, breedProp, weights, locusID, userMapData, chrs, fixedRegSize, varGenotypic, varResidual, chainLength, burnIn, outputFreq, onScreen)
+function w_bayesPR_BlockedGS_dummy(genoTrain, phenoTrain, breedProp,dummyVar, weights, locusID, userMapData, chrs, fixedRegSize, varGenotypic, varResidual, chainLength, burnIn, outputFreq, onScreen)
     SNPgroups = prepRegionData(userMapData, chrs, locusID, fixedRegSize)
     these2Keep = collect((burnIn+outputFreq):outputFreq:chainLength) #print these iterations
     nRegions    = length(SNPgroups)
@@ -241,8 +241,8 @@ function w_bayesPR_BlockedGS_dummy(genoTrain, phenoTrain, breedProp, weights, lo
     #Can use equal numbers as this is just starting value!
     breedProp = convert(Array{Float64},breedProp)
     F = copy(breedProp)
-#    F .-=  mean(breedProp,dims=1)
-    F = [ones(nRecords) F]
+    F .-=  mean(breedProp,dims=1)
+    F = [ones(nRecords) dummyVar F]
     
     #blocked sampler
     invFpiDF        = inv((F.*w)'*F)  #w[i] is already iD[i,i]
