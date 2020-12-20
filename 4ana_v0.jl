@@ -247,7 +247,7 @@ function w_bayesPR_BlockedGS_dummy(genoTrain, phenoTrain, breedProp,dummyVar, we
     #blocked sampler
     invFpiDF        = inv((F.*w)'*F)  #w[i] is already iD[i,i]
     FpiD            = F'iD        #this is to iterate over columns in the body "dot(view(XpiD,:,l),ycorr)" already transposed    
-    f               = [μ; mean(y .- μ)*vec(mean(breedProp,dims=1))]
+    f               = [μ; 0, mean(y .- μ)*vec(mean(breedProp,dims=1))]
     ycorr           = y - F*f
     GC.gc()
     #MCMC starts here
