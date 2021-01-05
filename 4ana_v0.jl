@@ -254,7 +254,7 @@ function w_bayesPR_BlockedGS_dummy(genoTrain, phenoTrain, breedProp,dummyVar, we
     for iter in 1:chainLength
         #sample residual variance
         varE = sampleVarE_w(νS_e,ycorr,w,df_e,nRecords)
-        #sample fixed effects, single-site gibbs sampling
+        #sample fixed effects, blocked gibbs sampling
         
         ycorr    .+= F*f
         rhs      = view(FpiD,:,:)*ycorr
@@ -590,6 +590,159 @@ function bayesPR2(randomEffects, centered, phenoTrain, weights, locusID, userMap
 #            println(covBeta[r])
         end
         outputControl2(nRandComp,onScreen,iter,these2Keep,tempBetaMat,μ,covBeta,varE,fixedRegSize,nRegions)
+    end
+    GC.gc()
+end
+
+#one trait multiple components, correlated
+function bayesPR2_BlockedGS_dummy(randomEffects, centered, phenoTrain, dummyVar,weights, locusID, userMapData, chrs, fixedRegSize, varGenotypic, varB, varResidual, chainLength, burnIn, outputFreq, onScreen)
+    SNPgroups  = prepRegionData(userMapData, chrs, locusID, fixedRegSize)
+    these2Keep = collect((burnIn+outputFreq):outputFreq:chainLength) #print these iterations
+    nRegions    = length(SNPgroups)
+    println("number of regions: ", nRegions)
+    nMarkers = length(vcat(SNPgroups...))
+    nRecords = size(phenoTrain,1)
+    println("number of markers: ", nMarkers)
+    println("number of records: ", nRecords)
+   
+    w           = convert(Array{Float64}, weights)
+    iD          = Matrix(Diagonal(w))  # Dii is 1/wii=1/(r2/(1-r2))==> Dii is (1-r2)/r2 ==> iDii is r2/(1-r2)
+
+    nRandComp = length(split(randomEffects, " "))
+    sum2pq = Array{Float64}(undef,nRandComp)
+
+    for i in 1:nRandComp
+        this = split(randomEffects, " ")[i]
+        println(this)
+        @eval $(Symbol("M$i")) = convert(Array{Float64},eval(Symbol("$(split(randomEffects, " ")[$i])")))
+
+        if centered==0
+            p           = mean(eval(Symbol("M$i")),dims=1)./2.0
+            sum2pq[i]   = sum(2*(1 .- p).*p)
+
+            nowM   = eval(Symbol("M$i"))
+            nowM .-= ones(Float64,nRecords)*2p
+            @eval $(Symbol("M$i")) = $nowM
+            else sum2pq[i] = centered[i]
+        end
+        println(@eval $(Symbol("M$i"))[1:3,1:3])
+    end
+    nowM = 0
+ 
+    sqrtW = sqrt.(w) ####for having M1piDM1 as well as M1piDM2....
+    MpM = []
+    for j in 1:nMarkers
+        tempM = Array{Float64}(undef,nRecords,0)
+        for k in 1:nRandComp
+            nowM  = @eval $(Symbol("M$k"))
+            tempM = convert(Array{Float64},hcat(tempM,nowM[:,j].*sqrtW)) ###sqrtW here
+        end
+    MpM = push!(MpM,tempM'tempM)
+    end
+    nowM  = 0
+    tempM = 0
+       
+    fileControlSt2(fixedRegSize)
+
+    #priors
+    dfEffectVar = 3.0
+    dfRes       = 4.0
+    
+    dfβ    = dfEffectVar + nRandComp
+    
+ #   mat2pq = sqrt.(sum2pq*sum2pq')
+    mat2pq = centered   
+
+    if varGenotypic==0.0
+ #       covBeta  = fill(Matrix(Diagonal(fill((dfβ-nRandComp-1).*0.001,nRandComp))),nRegions)
+        covBeta  = fill(varB,nRegions) #I added the use of varB here
+        Vb       = covBeta[1]
+        println("prior varB: $Vb")
+        else
+        covBeta  = fill(varGenotypic./mat2pq,nRegions)
+        Vb       = covBeta[1].*(dfβ-nRandComp-1)
+    end
+   
+    #to avoide singularity in inv(covBeta[r]) for the first iteration
+    #this is just the initial (starting) value
+    covBeta  = fill(Matrix(Diagonal(covBeta[1])),nRegions)
+
+    if varResidual==0.0
+        varResidual  = 0.0005
+        scaleRes     = 0.0005
+        else
+        scaleRes    = varResidual*(dfRes-2.0)/dfRes    
+    end
+    
+    y           = convert(Array{Float64}, phenoTrain)        
+   
+    #precomputation of vsE for convenience
+    νS_e            = scaleRes*dfRes
+    df_e            = dfRes
+    #initial values as "0"
+    tempBetaMat     = zeros(Float64,nRandComp,nMarkers)
+    μ               = mean(y)
+    ##########
+#    m1piDm1         = diag((M1.*w)'*M1)  #w[i] is already iD[i,i]
+    M1piD           = iD*M1        #this is to iterate over columns in the body "dot(view(XpiD,:,l),ycorr)"
+#    m2piDm2         = diag((M2.*w)'*M2) #I do it up with push!
+    M2piD           = iD*M2
+#    m3piDm3         = diag((M3.*w)'*M3)
+    M3piD           = iD*M3
+#    m4piDm4         = diag((M4.*w)'*M4)
+    M4piD           = iD*M4
+    ##########
+    
+    F = [ones(nRecords) dummyVar]
+    
+    #blocked sampler
+    invFpiDF        = inv((F.*w)'*F)  #w[i] is already iD[i,i]
+    FpiD            = F'iD        #this is to iterate over columns in the body "dot(view(XpiD,:,l),ycorr)" already transposed    
+    f               = [μ; 0]
+    ycorr           = y - F*f
+    GC.gc()
+    
+    #MCMC starts here
+    for iter in 1:chainLength
+        #sample residual variance
+        varE = sampleVarE_w(νS_e,ycorr,w,df_e,nRecords)
+        iVarE = 1/varE
+        
+        #sample fixed effects, blocked gibbs sampling
+        ycorr    .+= F*f
+        rhs      = view(FpiD,:,:)*ycorr
+        invLhs   = view(invFpiDF,:,:)
+        meanMu   = invLhs*rhs
+        f       .= rand(MvNormal(meanMu,convert(Array,Symmetric(invLhs*varE))))
+        ycorr    .-= F*f
+        
+        for r in 1:nRegions
+            theseLoci = SNPgroups[r]
+            regionSize = length(theseLoci)
+            invB = inv(covBeta[r]) ###################check this
+            for locus in theseLoci::UnitRange{Int64}
+#                sampleCorRandomBeta!(M,MpM,tempBetaMat,locus,ycorr,varE,invB)
+                BLAS.axpy!(view(tempBetaMat,1,locus)[],view(M1,:,locus),ycorr)
+                BLAS.axpy!(view(tempBetaMat,2,locus)[],view(M2,:,locus),ycorr)
+                BLAS.axpy!(view(tempBetaMat,3,locus)[],view(M3,:,locus),ycorr)
+                BLAS.axpy!(view(tempBetaMat,4,locus)[],view(M4,:,locus),ycorr)
+                rhs = [BLAS.dot(view(M1piD,:,locus),ycorr) ; BLAS.dot(view(M2piD,:,locus),ycorr) ; BLAS.dot(view(M3piD,:,locus),ycorr) ; BLAS.dot(view(M4piD,:,locus),ycorr)]*iVarE
+                invLhs   = inv(MpM[locus]*iVarE + invB)
+                meanBeta = invLhs*rhs
+                tempBetaMat[:,locus] = rand(MvNormal(meanBeta,convert(Array,Symmetric(invLhs))))
+                BLAS.axpy!(-1*view(tempBetaMat,1,locus)[],view(M1,:,locus),ycorr)
+                BLAS.axpy!(-1*view(tempBetaMat,2,locus)[],view(M2,:,locus),ycorr)
+                BLAS.axpy!(-1*view(tempBetaMat,3,locus)[],view(M3,:,locus),ycorr)
+                BLAS.axpy!(-1*view(tempBetaMat,4,locus)[],view(M4,:,locus),ycorr)
+            end
+#            Random.seed!(iter)
+            covBeta[r] = sampleCovBeta(dfβ,regionSize,Vb,tempBetaMat,theseLoci)
+#            println(covBeta[r])
+#            Random.seed!(iter)
+#            covBeta[r] = sampleCovBeta_iW(dfβ,regionSize,Vb,tempBetaMat,theseLoci)
+#            println(covBeta[r])
+        end
+        outputControl2(nRandComp,onScreen,iter,these2Keep,tempBetaMat,f',covBeta,varE,fixedRegSize,nRegions)
     end
     GC.gc()
 end
